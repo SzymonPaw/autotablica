@@ -73,6 +73,8 @@ services:
       - autotablica_network
     environment:
       - REACT_APP_API_URL=http://localhost:8000/api
+      - CHOKIDAR_USEPOLLING=true
+      - HOST=0.0.0.0
 
 volumes:
   mysql_data:
