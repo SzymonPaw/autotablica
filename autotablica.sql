@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: mysql:3306
--- Generation Time: Paź 09, 2025 at 06:24 PM
+-- Generation Time: Paź 09, 2025 at 07:41 PM
 -- Wersja serwera: 8.0.43
 -- Wersja PHP: 8.2.27
 
@@ -201,6 +201,13 @@ CREATE TABLE `ogloszenia` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Zrzut danych tabeli `ogloszenia`
+--
+
+INSERT INTO `ogloszenia` (`id`, `uzytkownik_id`, `tytul`, `opis`, `cena`, `marka_id`, `model_id`, `vin`, `numer_rejestracyjny`, `data_pierwszej_rej`, `przebieg`, `rodzaj_paliwa`, `skrzynia_biegow`, `pojemnosc_silnika`, `status`, `created_at`, `updated_at`) VALUES
+(3, 1, 'Sprzedam Audi A4 2.0 TDI', 'Rok produkcji 2015, przebieg 120000 km, pełna historia serwisowa.', 55000.00, 1, 1, 'WAUZZZ8K7FFA12345', 'KR12345', '2015-06-15', 120000, 'Diesel', 'Automatyczna', 2.00, 'aktywne', '2025-10-09 19:37:30', '2025-10-09 19:37:30');
+
 -- --------------------------------------------------------
 
 --
@@ -233,7 +240,9 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('CfAeWnOJg7ajQqrGYfVGdSvg0PlOqGWMS2R7p19d', NULL, '172.19.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiVk12Y3R5bkkycVZvbGg3bnFjY1JDeDBJZTdrTWdiQzljSDh0R1VxUSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly9sb2NhbGhvc3Q6ODAwMCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1760026798);
+('3pGHDhXYbjeYh76StEixb6zNhOb1HeFzEemcheBS', NULL, '172.19.0.1', 'PostmanRuntime/7.43.2', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiZXF6d2Y4TFlvVTlPWUJjZTV5SzNwVzhhcUxHQVIwaHVld1NXZGJvRyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzY6Imh0dHA6Ly9sb2NhbGhvc3Q6ODAwMC9hcGkvb2dsb3N6ZW5pYSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1760038671),
+('CfAeWnOJg7ajQqrGYfVGdSvg0PlOqGWMS2R7p19d', NULL, '172.19.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiVk12Y3R5bkkycVZvbGg3bnFjY1JDeDBJZTdrTWdiQzljSDh0R1VxUSI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly9sb2NhbGhvc3Q6ODAwMCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1760026798),
+('OFiNxTZgSwkRdyymZUIt0Rt1TpwX2AilzF6WsWr3', NULL, '172.19.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 OPR/121.0.0.0', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiVGwzNGZJWXU2clI0QnA5OElBR241N0p3bUFmSHpSSWRYTUFzOW1GOCI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzY6Imh0dHA6Ly9sb2NhbGhvc3Q6ODAwMC9hcGkvb2dsb3N6ZW5pYSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1760038655);
 
 -- --------------------------------------------------------
 
@@ -265,6 +274,13 @@ CREATE TABLE `users` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Zrzut danych tabeli `users`
+--
+
+INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
+(1, 'Jan Kowalski', 'jan.kowalski@example.com', NULL, '$2y$10$abcdefghijklmnopqrstuv', NULL, '2025-10-09 19:37:30', '2025-10-09 19:37:30');
 
 -- --------------------------------------------------------
 
@@ -436,7 +452,7 @@ ALTER TABLE `modele`
 -- AUTO_INCREMENT dla tabeli `ogloszenia`
 --
 ALTER TABLE `ogloszenia`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT dla tabeli `ulubione`
@@ -448,7 +464,7 @@ ALTER TABLE `ulubione`
 -- AUTO_INCREMENT dla tabeli `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT dla tabeli `zdjecia`
