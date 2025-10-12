@@ -69,11 +69,15 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    working_dir: /app
+    command: ["npm", "start"]
     networks:
       - autotablica_network
     environment:
       - REACT_APP_API_URL=http://localhost:8000/api
       - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=100
+      - WATCHPACK_POLLING=true
       - HOST=0.0.0.0
 
 volumes:
