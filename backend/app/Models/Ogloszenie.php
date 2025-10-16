@@ -29,6 +29,13 @@ class Ogloszenie extends Model
         'status',
     ];
 
+    protected $casts = [
+        'cena' => 'float',
+        'data_pierwszej_rej' => 'date',
+        'przebieg' => 'integer',
+        'pojemnosc_silnika' => 'float',
+    ];
+
     public function uzytkownik()
     {
         return $this->belongsTo(User::class, 'uzytkownik_id');
