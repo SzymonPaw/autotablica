@@ -56,8 +56,8 @@ Poniżej znajduje się kompletny, praktyczny plan wdrożenia backendu AutoTablic
 ### Szkielet zadań dla agenta (kolejność)
 - [x] Autoryzacja: zainstaluj/aktywuj Sanctum, dodaj trasy Auth i middleware `auth:sanctum`, wystawianie i unieważnianie tokenów.
 - [x] Resources i paginacja: utwórz API Resources dla `Ogloszenie` i kolekcji, ujednolicając odpowiedzi i meta/links oraz obsługując filtrowanie i sortowanie listy ogłoszeń.
-- [ ] CRUD ogłoszeń: kontroler REST z politykami dostępu do edycji/usuwania i pełną walidacją requestów.
-- [ ] Upload: endpoint zdjęć, zapis na Storage public oraz kasowanie wraz z plikiem, z testem E2E `multipart/form-data`.
+- [x] CRUD ogłoszeń: kontroler REST z politykami dostępu do dodawanie/edycji/usuwanie/zmiana statusu i pełną walidacją requestów.
+- [x] Upload: endpoint zdjęć, zapis na Storage public oraz kasowanie wraz z plikiem, z testem E2E `multipart/form-data`.
 - [ ] Ulubione: relacja pivot i trzy endpointy idempotentne zgodnie z konwencją.
 - [ ] Słowniki: publiczne endpointy dla marek i modeli z prostą pamięcią podręczną na poziomie HTTP/Resource w razie potrzeby dokumentacyjnej.
 - [ ] Rate limiting: globalny limiter dla grupy `api` i ewentualne niestandardowe limity dla upload/logowania.

@@ -3,8 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreOgloszenieRequest;
+use App\Http\Requests\UpdateOgloszenieRequest;
 use App\Http\Resources\OgloszenieCollection;
+use App\Http\Resources\OgloszenieResource;
 use App\Models\Ogloszenie;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -125,5 +129,49 @@ class OgloszenieController extends Controller
             'filters' => $filters,
             'sort' => $appliedSort,
         ]);
+    }
+
+    public function store(StoreOgloszenieRequest $request): JsonResponse
+    {
+        $payload = $request->validated();
+
+        $ogloszenie = Ogloszenie::create([
+            ...$payload,
+            'uzytkownik_id' => $request->user()->id,
+        ]);
+
+        $ogloszenie->load(['marka', 'modelPojazdu', 'zdjecia']);
+
+        return (new OgloszenieResource($ogloszenie))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    public function show(Ogloszenie $ogloszenie): OgloszenieResource
+    {
+        $ogloszenie->loadMissing(['marka', 'modelPojazdu', 'zdjecia']);
+
+        return new OgloszenieResource($ogloszenie);
+    }
+
+    public function update(UpdateOgloszenieRequest $request, Ogloszenie $ogloszenie): OgloszenieResource
+    {
+        $validated = $request->validated();
+
+        $ogloszenie->fill($validated);
+        $ogloszenie->save();
+
+        $ogloszenie->load(['marka', 'modelPojazdu', 'zdjecia']);
+
+        return new OgloszenieResource($ogloszenie);
+    }
+
+    public function destroy(Ogloszenie $ogloszenie): JsonResponse
+    {
+        $this->authorize('delete', $ogloszenie);
+
+        $ogloszenie->delete();
+
+        return response()->json(null, 204);
     }
 }
