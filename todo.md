@@ -59,8 +59,8 @@ Poniżej znajduje się kompletny, praktyczny plan wdrożenia backendu AutoTablic
 - [x] CRUD ogłoszeń: kontroler REST z politykami dostępu do dodawanie/edycji/usuwanie/zmiana statusu i pełną walidacją requestów.
 - [x] Upload: endpoint zdjęć, zapis na Storage public oraz kasowanie wraz z plikiem, z testem E2E `multipart/form-data`.
 - [x] Ulubione: relacja pivot i trzy endpointy idempotentne zgodnie z konwencją.
-- [ ] Słowniki: publiczne endpointy dla marek i modeli z prostą pamięcią podręczną na poziomie HTTP/Resource w razie potrzeby dokumentacyjnej.
-- [ ] Rate limiting: globalny limiter dla grupy `api` i ewentualne niestandardowe limity dla upload/logowania.
+- [x] Słowniki: publiczne endpointy dla marek i modeli z prostą pamięcią podręczną na poziomie HTTP/Resource w razie potrzeby dokumentacyjnej.
+- [x] Rate limiting: globalny limiter dla grupy `api` i ewentualne niestandardowe limity dla upload/logowania.
 - [ ] Dokumentacja: instalacja Scribe, adnotacje, build dokumentacji, publikacja HTML i kolekcji Postmana w repo.
 
 ### Przykładowe kontrakty odpowiedzi
