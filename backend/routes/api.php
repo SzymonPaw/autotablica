@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OgloszenieController;
+use App\Http\Controllers\Api\UlubioneController;
 use App\Http\Controllers\Api\ZdjecieController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,4 +26,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
 
     Route::post('ogloszenia/{ogloszenie}/zdjecia', [ZdjecieController::class, 'store']);
     Route::delete('zdjecia/{zdjecie}', [ZdjecieController::class, 'destroy']);
+
+    Route::get('ulubione', [UlubioneController::class, 'index']);
+    Route::post('ogloszenia/{ogloszenie}/ulubione', [UlubioneController::class, 'store']);
+    Route::delete('ogloszenia/{ogloszenie}/ulubione', [UlubioneController::class, 'destroy']);
 });
