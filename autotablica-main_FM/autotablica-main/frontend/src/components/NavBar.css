@@ -1,0 +1,176 @@
+.navbar {
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  /* define a stable nav height so content can be offset correctly */
+  --nav-height: 64px;
+  height: var(--nav-height);
+  padding: 0 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.navbar-brand h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #2c3e50;
+}
+
+.navbar-brand a {
+  color: inherit;
+  text-decoration: none;
+  position: relative;
+  display: inline-block;
+  transition: color 0.2s ease;
+}
+
+.navbar-brand a:hover {
+  text-decoration: none;
+  color: inherit; /* brak niebieskiego na hover */
+}
+
+/* Subtelna animowana kreska pod logo przy hover */
+.navbar-brand a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 2px;
+  width: 0;
+  background: currentColor; /* użyj koloru tekstu, żadnych niebieskich akcentów */
+  transition: width 0.2s ease;
+  border-radius: 2px;
+}
+
+.navbar-brand a:hover::after {
+  width: 100%;
+}
+
+/* Widoczny focus dla dostępności */
+.navbar-brand a:focus-visible {
+  outline: 2px solid #2c3e50; /* neutralny kolor focusa */
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.navbar-menu {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-primary, .btn-secondary, .btn-highlight {
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-primary {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2980b9;
+}
+
+.btn-secondary {
+  background-color: #ecf0f1;
+  color: #2c3e50;
+}
+
+.btn-secondary:hover {
+  background-color: #bdc3c7;
+}
+
+.btn-highlight {
+  background-color: #27ae60;
+  color: white;
+  font-weight: 500;
+  padding: 0.5rem 1.25rem;
+  box-shadow: 0 2px 4px rgba(39, 174, 96, 0.2);
+}
+
+.btn-highlight:hover {
+  background-color: #219a52;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+  color: white;
+  text-decoration: none;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #7f8c8d;
+}
+
+.modal-close:hover {
+  color: #2c3e50;
+}
+
+.login-required-message {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.login-required-message h2 {
+  margin-bottom: 1rem;
+  color: #2c3e50;
+}
+
+.login-required-message p {
+  margin-bottom: 2rem;
+  color: #64748b;
+}
+
+.login-required-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}

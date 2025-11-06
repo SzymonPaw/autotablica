@@ -1,0 +1,331 @@
+.App {
+  min-height: 100vh;
+  background-color: #f5f6fa;
+}
+
+.main-content {
+  margin-top: 60px; /* Space for fixed navbar */
+  padding: 1rem; /* bazowy padding */
+  display: grid;
+  /* Filtry 15% (min 220px), promowane reszta */
+  grid-template-columns: minmax(220px, 15%) minmax(0, 1fr);
+  gap: 2rem;
+  width: 100%; /* Zamiast 100vw, żeby nie powodować poziomego scrolla z paddingiem */
+  box-sizing: border-box; /* uwzględnij padding w szerokości */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+/* Upewnij się, że sekcja promowanych wykorzystuje całą szerokość swojej kolumny */
+.listings.promoted {
+  width: 100%;
+}
+
+/* Na stronie głównej sekcja promowanych ma zajmować pełną szerokość siatki */
+.listings.promoted.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Większy odstęp przed przyciskiem pod listą, by nie "wchodził" na kafelki */
+.listings.promoted .load-more {
+  margin-top: 3rem;
+}
+
+/* Podstawowe filtry nad najnowszymi (poziomo) */
+.basic-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+
+.basic-filters label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.95rem;
+}
+
+.basic-filters select,
+.basic-filters input[type="number"] {
+  min-width: 140px;
+  padding: 0.5rem;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+}
+
+.basic-filters .actions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Ujednolicenie wysokości i wyrównania przycisków podstawowych filtrów */
+.basic-filters .actions .btn-primary,
+.basic-filters .actions .btn-secondary,
+.basic-filters .actions button,
+.basic-filters .actions a.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px; /* dopasowane do wysokości pól (ok. 40-42px) */
+  padding: 0.5rem 1.1rem;
+  box-sizing: border-box;
+  font-weight: 600;
+  line-height: 1; /* zapobiega różnicom przez line-height dziedziczony */
+}
+
+/* Zapewnij spójność wysokości input/select w basic-filters */
+.basic-filters select,
+.basic-filters input[type="number"] {
+  height: 42px;
+}
+
+@media (max-width: 900px) {
+  .basic-filters .actions .btn-primary,
+  .basic-filters .actions .btn-secondary,
+  .basic-filters .actions button,
+  .basic-filters .actions a.btn-secondary {
+    height: 44px; /* trochę większe na dotykowych urządzeniach */
+  }
+}
+
+@media (max-width: 900px) {
+  .basic-filters {
+    align-items: stretch;
+  }
+  .basic-filters .actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+}
+
+/* Homepage: pełna szerokość, wyłącz ograniczenia z .App w App.css */
+.App.home-page {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.filters-section {
+  background: white;
+  padding: 1.25rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  height: fit-content;
+  position: sticky;
+  top: 70px;
+  font-size: 0.95rem; /* Zmniejszamy rozmiar tekstu w filtrach */
+}
+
+.filters-section h2 {
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #eee;
+}
+
+.filter-group {
+  margin-bottom: 1.5rem;
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #34495e;
+}
+
+.filter-group input,
+.filter-group select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  margin-top: 0.25rem;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+/* Akcje w kafelku filtrów (AllListings) – zawijanie i responsywność */
+.filters-section .filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.filters-section .filter-actions > * {
+  flex: 1 1 140px; /* pozwala zawinąć przyciski w wąskim kafelku */
+}
+
+/* Wyśrodkuj treść w przyciskach filtrów (poziomo i pionowo) */
+.filters-section .filter-actions .btn-primary,
+.filters-section .filter-actions .btn-secondary,
+.filters-section .filter-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.listings {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  min-height: calc(100vh - 100px); /* Wysokość na cały ekran minus navbar i margines */
+}
+
+/* Desktop: zawęź treści sekcji (nagłówek, filtry, lista i akcje) tak,
+   aby filtry zaczynały się w tej samej kolumnie co ogłoszenia */
+@media (min-width: 1024px) {
+  .listings.promoted .listings-header,
+  .listings.promoted .basic-filters,
+  .listings.promoted .load-more {
+    max-width: 75%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.listings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.listings-header h2 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.load-more {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.load-more button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.load-more button:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.load-more button:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1024px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Szersze ekrany: zdejmij boczne paddingi i zmniejsz odstępy dla maksymalnej szerokości kart */
+@media (min-width: 1280px) {
+  .AppRoot .container.home-full .main-content {
+    padding-left: 0.75rem; /* lewy margines */
+    padding-right: 1.5rem; /* większy prawy margines dla wyraźnego odstępu */
+    gap: 1.5rem;
+  }
+
+  .AppRoot .container.home-full .listings.promoted {
+    padding: 0.75rem; /* minimalny padding sekcji promowanych */
+  }
+}
+
+.listings {
+  margin-top: 2rem;
+}
+
+.listings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.listings-header h2 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.add-listing-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background-color: #27ae60;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(39, 174, 96, 0.2);
+}
+
+.add-listing-button:hover {
+  background-color: #219a52;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+  color: white;
+  text-decoration: none;
+}
+
+.load-more {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.load-more button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  color: #fff;
+  background-color: #0066cc;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.load-more button:hover:not(:disabled) {
+  background-color: #0052a3;
+}
+
+.load-more button:disabled {
+  background-color: #99c2ff;
+  cursor: not-allowed;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.25rem;
+  color: #666;
+}

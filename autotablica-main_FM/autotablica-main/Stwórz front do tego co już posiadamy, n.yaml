@@ -1,0 +1,12 @@
+Stwórz front do tego co już posiadamy, niech projekt zawiera:
+
+-nowoczecny wygląd
+-stronę główną z:
+  -Funkcją wyszukiwania
+  -Kategorie produktów
+  -Polecane produkty
+  -listą najnowszych produktów
+-stronę produktu z:
+  -Zdjęciami produktu
+  -Opisem produktu
+  -specyfikacja techniczna

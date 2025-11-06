@@ -1,0 +1,138 @@
+.favorites-page {
+  padding: 2rem 0;
+}
+
+.favorites-page h1 {
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.empty-state p {
+  margin-bottom: 1.5rem;
+  color: #666;
+}
+
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.favorite-card {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.favorite-card:hover {
+  transform: translateY(-2px);
+}
+
+.favorite-image {
+  display: block;
+  position: relative;
+  aspect-ratio: 16/9;
+  background: #f5f5f5;
+  overflow: hidden;
+}
+
+.favorite-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.favorite-image:hover img {
+  transform: scale(1.05);
+}
+
+.no-image {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+}
+
+.favorite-content {
+  padding: 1rem;
+}
+
+.favorite-title {
+  text-decoration: none;
+  color: inherit;
+}
+
+.favorite-title h3 {
+  margin: 0 0 0.5rem;
+  color: #333;
+  font-size: 1.1rem;
+  transition: color 0.2s;
+}
+
+.favorite-title:hover h3 {
+  color: #0066cc;
+}
+
+.favorite-price {
+  font-weight: bold;
+  color: #0066cc;
+  margin: 0 0 0.5rem;
+}
+
+.favorite-seller {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0 0 0.25rem;
+}
+
+.favorite-date {
+  color: #888;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.favorite-actions {
+  padding: 1rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-danger {
+  flex-grow: 1;
+  padding: 0.5rem 1rem;
+  background: #fff;
+  color: #dc3545;
+  border: 1px solid #dc3545;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-danger:hover {
+  background: #dc3545;
+  color: white;
+}
+
+.error-message {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #fef1f2;
+  border: 1px solid #fee4e5;
+  border-radius: 4px;
+  color: #b42626;
+}

@@ -1,0 +1,222 @@
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import './Home.css';
+import { useAuth } from '../contexts/AuthContext';
+import Listing from '../components/Listing';
+import SearchBar from '../components/SearchBar';
+import LoginForm from '../components/auth/LoginForm';
+import RegisterForm from '../components/auth/RegisterForm';
+import { fetchListings } from '../api/client';
+import '../components/auth/auth.css';
+
+interface PaginationMeta {
+  current_page: number;
+  from: number;
+  last_page: number;
+  path: string;
+  per_page: number;
+  to: number;
+  total: number;
+}
+
+interface Ogloszenie {
+  id: number;
+  uzytkownik_id: number;
+  tytul: string;
+  opis: string;
+  cena: string;
+  marka_id: number;
+  model_id: number;
+  vin: string;
+  numer_rejestracyjny: string;
+  data_pierwszej_rej: string;
+  przebieg: number;
+  rodzaj_paliwa: string;
+  skrzynia_biegow: string;
+  pojemnosc_silnika: string;
+  status: string;
+  created_at: string;
+}
+
+interface ApiResponse {
+  data: Ogloszenie[];
+  meta?: PaginationMeta;
+}
+
+interface UserProfile {
+  id: number;
+  name: string;
+  email: string;
+  created_at?: string | null;
+  updated_at?: string | null;
+  [key: string]: unknown;
+}
+
+function handlePagination(res: unknown, currentPage: number): { items: Ogloszenie[]; more: boolean } {
+  let items: Ogloszenie[] = [];
+  let more = false;
+
+  if (Array.isArray(res)) {
+    items = res;
+    more = items.length > 0;
+  } else if (res && typeof res === 'object') {
+    const response = res as ApiResponse;
+    if ('data' in response) {
+      items = response.data;
+      if (response.meta) {
+        const current = response.meta.current_page ?? currentPage;
+        const last = response.meta.last_page ?? null;
+        more = last ? current < last : items.length > 0;
+      } else {
+        more = items.length > 0;
+      }
+    }
+  }
+
+  return { items, more };
+}
+
+const Home: React.FC = () => {
+  const { user, logout, isLoading: isAuthLoading } = useAuth();
+  const [ogloszenia, setOgloszenia] = useState<Ogloszenie[]>([]);
+  const [ogloszeniaError, setOgloszeniaError] = useState<string | null>(null);
+  const [loadingOgloszenia, setLoadingOgloszenia] = useState<boolean>(true);
+  const [search, setSearch] = useState<string>('');
+  const [page, setPage] = useState<number>(1);
+  const [hasMore, setHasMore] = useState<boolean>(false);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadPage(p: number, append = false) {
+      try {
+        if (append) setLoadingMore(true); else setLoadingOgloszenia(true);
+        setOgloszeniaError(null);
+
+        const res = await fetchListings({ page: p });
+        if (!mounted) return;
+
+        const { items, more } = handlePagination(res, p);
+
+        if (append) {
+          setOgloszenia(prev => [...prev, ...items]);
+          setPage(p);
+        } else {
+          setOgloszenia(items);
+          setPage(p);
+        }
+        setHasMore(more);
+      } catch (err) {
+        if (!mounted) return;
+        const message = err instanceof Error ? err.message : 'Nie udało się pobrać ogłoszeń.';
+        setOgloszeniaError(message);
+      } finally {
+        if (!mounted) return;
+        setLoadingOgloszenia(false);
+        setLoadingMore(false);
+      }
+    }
+
+    // initial load
+    loadPage(1, false);
+
+    return () => { mounted = false; };
+  }, []);
+
+  const filtered = React.useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return ogloszenia;
+
+    return ogloszenia.filter((it) => {
+      return (
+        (it.tytul && it.tytul.toLowerCase().includes(q)) ||
+        (it.vin && String(it.vin).toLowerCase().includes(q)) ||
+        (it.numer_rejestracyjny && String(it.numer_rejestracyjny).toLowerCase().includes(q))
+      );
+    });
+  }, [ogloszenia, search]);
+
+  const handleLoadMore = async () => {
+    if (loadingMore) return;
+    const next = page + 1;
+    setLoadingMore(true);
+    
+    try {
+      const res = await fetchListings({ page: next });
+      const { items, more } = handlePagination(res, next);
+
+      setOgloszenia(prev => [...prev, ...items]);
+      setPage(next);
+      setHasMore(more);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Nie udało się pobrać kolejnej strony ogłoszeń.';
+      setOgloszeniaError(message);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  if (isAuthLoading) {
+    return (
+      <div className="App">
+        <p className="loading">Ładowanie...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="App">
+      <div className="header">
+        <h1>AutoTablica</h1>
+        {!user ? (
+          <div className="auth-container">
+            <RegisterForm />
+            <LoginForm />
+          </div>
+        ) : (
+          <section className="user-profile">
+            <h2>Twoje konto</h2>
+            <dl className="profile-summary">
+              <div>
+                <dt>Imię i nazwisko</dt>
+                <dd>{user.name}</dd>
+              </div>
+              <div>
+                <dt>Adres e-mail</dt>
+                <dd>{user.email}</dd>
+              </div>
+            </dl>
+            <div className="profile-actions">
+              <button onClick={() => { /* TODO: Implement */ }} className="btn-secondary">
+                Edytuj profil
+              </button>
+              <button onClick={logout} className="btn-danger">
+                Wyloguj
+              </button>
+            </div>
+          </section>
+        )}
+      </div>
+
+      <section className="listings">
+        <div className="listings-header">
+          <h2>Ogłoszenia</h2>
+          <SearchBar value={search} onChange={setSearch} />
+        </div>
+        
+        <Listing items={filtered} loading={loadingOgloszenia} error={ogloszeniaError} />
+        
+        {hasMore && (
+          <div className="load-more">
+            <button type="button" onClick={handleLoadMore} disabled={loadingMore}>
+              {loadingMore ? 'Ładowanie...' : 'Pokaż więcej'}
+            </button>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+};
+
+export default Home;

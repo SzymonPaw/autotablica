@@ -1,0 +1,7 @@
+# Ignore storage symlink and heavy dirs during image build
+public/storage
+storage/
+vendor/
+node_modules/
+.git
+.env
