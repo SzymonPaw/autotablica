@@ -14,6 +14,7 @@ Route::prefix('auth')->group(function (): void {
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
+        Route::delete('me', [AuthController::class, 'destroy']);
     });
 });
 
@@ -25,12 +26,15 @@ Route::prefix('slowniki')->group(function (): void {
     Route::get('modele', [SlownikController::class, 'modele']);
 });
 
+// Tymczasowo: zezwól na dodawanie ogłoszeń bez logowania
+Route::post('ogloszenia', [OgloszenieController::class, 'store']);
+Route::post('ogloszenia/{ogloszenie}/zdjecia', [ZdjecieController::class, 'store'])->middleware('throttle:upload-images');
+
 Route::middleware('auth:sanctum')->group(function (): void {
-    Route::post('ogloszenia', [OgloszenieController::class, 'store']);
     Route::patch('ogloszenia/{ogloszenie}', [OgloszenieController::class, 'update']);
     Route::delete('ogloszenia/{ogloszenie}', [OgloszenieController::class, 'destroy']);
 
-    Route::post('ogloszenia/{ogloszenie}/zdjecia', [ZdjecieController::class, 'store'])->middleware('throttle:upload-images');
+    // Upload zdjęć wymagał logowania — tymczasowo dostępny publicznie (patrz wyżej)
     Route::delete('zdjecia/{zdjecie}', [ZdjecieController::class, 'destroy']);
 
     Route::get('ulubione', [UlubioneController::class, 'index']);

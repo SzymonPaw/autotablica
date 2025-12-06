@@ -60,6 +60,7 @@ services:
       - DB_DATABASE=autotablica
       - DB_USERNAME=laravel_user
       - DB_PASSWORD=laravel_password
+      - APP_URL=http://localhost:8000
 
   backend_proxy:
     image: nginx:stable-alpine

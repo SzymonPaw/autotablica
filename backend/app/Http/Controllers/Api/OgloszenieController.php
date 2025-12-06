@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateOgloszenieRequest;
 use App\Http\Resources\OgloszenieCollection;
 use App\Http\Resources\OgloszenieResource;
 use App\Models\Ogloszenie;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -135,9 +136,21 @@ class OgloszenieController extends Controller
     {
         $payload = $request->validated();
 
+        // Ustal użytkownika. Jeśli brak zalogowanego, użyj/utwórz konto gościa.
+        $user = $request->user();
+        if (! $user) {
+            $user = User::firstOrCreate(
+                ['email' => 'guest@autotablica.local'],
+                [
+                    'name' => 'Gość',
+                    'password' => bcrypt(Str::random(24)),
+                ]
+            );
+        }
+
         $ogloszenie = Ogloszenie::create([
             ...$payload,
-            'uzytkownik_id' => $request->user()->id,
+            'uzytkownik_id' => $user->id,
         ]);
 
         $ogloszenie->load(['marka', 'modelPojazdu', 'zdjecia']);

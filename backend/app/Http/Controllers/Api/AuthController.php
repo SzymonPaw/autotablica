@@ -14,14 +14,15 @@ class AuthController extends Controller
 {
     public function register(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', Password::defaults()],
-            'token_name' => ['nullable', 'string', 'max:255'],
-            'abilities' => ['nullable', 'array'],
-            'abilities.*' => ['string', 'max:255'],
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+                'password' => ['required', 'string', Password::defaults()],
+                'token_name' => ['nullable', 'string', 'max:255'],
+                'abilities' => ['nullable', 'array'],
+                'abilities.*' => ['string', 'max:255'],
+            ]);
 
         $userData = Arr::only($validated, ['name', 'email', 'password']);
 
@@ -37,6 +38,12 @@ class AuthController extends Controller
             'token_type' => 'Bearer',
             'data' => $user,
         ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'errors' => method_exists($e, 'errors') ? $e->errors() : null,
+            ], 422);
+        }
     }
 
     public function login(Request $request): JsonResponse
@@ -94,6 +101,19 @@ class AuthController extends Controller
                 'created_at' => $user->created_at?->toIso8601String(),
                 'updated_at' => $user->updated_at?->toIso8601String(),
             ],
+        ]);
+    }
+
+    public function destroy(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Revoke active tokens before removing the account
+        $user->tokens()->delete();
+        $user->delete();
+
+        return response()->json([
+            'message' => 'Konto zostało pomyślnie usunięte.',
         ]);
     }
 }

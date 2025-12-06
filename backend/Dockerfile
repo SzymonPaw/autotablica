@@ -27,6 +27,14 @@ RUN { \
     echo "opcache.save_comments=1"; \
 } > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
+# Configure PHP upload limits (for image uploads)
+RUN { \
+    echo "upload_max_filesize=20M"; \
+    echo "post_max_size=20M"; \
+    echo "memory_limit=256M"; \
+    echo "max_file_uploads=20"; \
+} > /usr/local/etc/php/conf.d/uploads.ini
+
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 

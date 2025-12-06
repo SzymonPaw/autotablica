@@ -13,11 +13,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Opcjonalny użytkownik testowy
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+        ]);
+
+        // Seed słowników marek i modeli (niewielki zestaw testowy)
+        $this->call([
+            MarkiModeleSeeder::class,
         ]);
     }
 }

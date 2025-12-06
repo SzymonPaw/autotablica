@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: autotablica_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: autotablica
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: laravel_user
+      MYSQL_PASSWORD: laravel_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - autotablica_network
+
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: autotablica_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root_password
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - autotablica_network
+
+  # Laravel Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: autotablica_backend
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      # On Windows bind mounts can be slow. Keep app source mounted but
+      # store composer/vendor in a named volume to avoid heavy sync overhead.
+      - ./backend:/var/www:cached
+      - backend_vendor:/var/www/vendor
+    # php-fpm listens on 9000 inside container; we'll expose via nginx proxy
+    ports:
+      - "9000"
+    depends_on:
+      - mysql
+    networks:
+      - autotablica_network
+    environment:
+      - DB_HOST=mysql
+      - DB_DATABASE=autotablica
+      - DB_USERNAME=laravel_user
+      - DB_PASSWORD=laravel_password
+
+  backend_proxy:
+    image: nginx:stable-alpine
+    container_name: autotablica_backend_proxy
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend:/var/www:ro,cached
+      - ./backend/docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+    networks:
+      - autotablica_network
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: autotablica_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    working_dir: /app
+    command: ["npm", "start"]
+    networks:
+      - autotablica_network
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000/api
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=100
+      - WATCHPACK_POLLING=true
+      - HOST=0.0.0.0
+
+volumes:
+  mysql_data:
+  backend_vendor:
+
+networks:
+  autotablica_network:
+    driver: bridge
