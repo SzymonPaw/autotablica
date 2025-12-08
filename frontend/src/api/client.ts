@@ -5,6 +5,7 @@ export interface ApiResponse<T> {
   message?: string;
   token?: string;
   token_type?: string;
+  raw?: any;
 }
 
 interface ApiError {
@@ -49,6 +50,7 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
       message: parsed?.message,
       token: parsed?.token,
       token_type: parsed?.token_type,
+      raw: parsed,
     };
 
     // If backend returned a token at the root (e.g. { token, data }), make sure it's accessible
@@ -131,8 +133,23 @@ export async function fetchFavoriteListings(params?: Record<string, any>): Promi
   }
 
   const query = searchParams.toString();
-  const response = await apiRequest<FavoritesResponse<any>>(`/ulubione${query ? `?${query}` : ''}`);
-  return response.data;
+  const response = await apiRequest<any>(`/ulubione${query ? `?${query}` : ''}`);
+
+  const raw = response.raw;
+  if (raw && typeof raw === 'object' && Array.isArray(raw.data)) {
+    return {
+      data: raw.data,
+      links: raw.links,
+      meta: raw.meta,
+      filters: raw.filters,
+      sort: raw.sort,
+    };
+  }
+
+  const fallbackData = Array.isArray(response.data) ? response.data : [];
+  return {
+    data: fallbackData,
+  };
 }
 
 export async function addListingToFavorites(listingId: number | string): Promise<void> {

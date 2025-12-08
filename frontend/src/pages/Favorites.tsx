@@ -8,14 +8,14 @@ import './Favorites.css';
 interface Listing {
   id: number;
   tytul: string;
-  opis: string;
+  opis?: string;
   cena: number;
   created_at: string;
   zdjecia: Array<{ id: number; url: string }>;
-  user: {
+  user?: {
     id: number;
-    name: string;
-  };
+    name?: string | null;
+  } | null;
 }
 
 const Favorites: React.FC = () => {
@@ -85,9 +85,11 @@ const Favorites: React.FC = () => {
                   <h3>{listing.tytul}</h3>
                 </Link>
                 <p className="favorite-price">{listing.cena.toLocaleString('pl-PL')} zł</p>
-                <p className="favorite-seller">
-                  Sprzedający: {listing.user.name}
-                </p>
+                {listing.user?.name && (
+                  <p className="favorite-seller">
+                    Sprzedający: {listing.user.name}
+                  </p>
+                )}
                 <p className="favorite-date">
                   Dodano: {new Date(listing.created_at).toLocaleDateString('pl-PL')}
                 </p>
