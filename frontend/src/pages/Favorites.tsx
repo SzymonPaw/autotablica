@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { apiRequest } from '../api/client';
-import { useAuth } from '../contexts/AuthContext';
+import { fetchFavoriteListings } from '../api/client';
+import { useFavorites } from '../contexts/FavoritesContext';
 import LoadingScreen from '../components/common/LoadingScreen';
 import './Favorites.css';
 
@@ -19,20 +19,17 @@ interface Listing {
 }
 
 const Favorites: React.FC = () => {
-  const { token } = useAuth();
   const [favorites, setFavorites] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { removeFavorite } = useFavorites();
 
   useEffect(() => {
     const fetchFavorites = async () => {
       try {
-        const { data } = await apiRequest<{ data: Listing[] }>('/ulubione', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        setFavorites(data.data);
+        const payload = await fetchFavoriteListings({ per_page: 50, sort: '-created_at' });
+        const items = Array.isArray(payload?.data) ? payload.data : [];
+        setFavorites(items);
       } catch (err) {
         setError('Nie udało się pobrać ulubionych ogłoszeń');
       } finally {
@@ -41,17 +38,11 @@ const Favorites: React.FC = () => {
     };
 
     fetchFavorites();
-  }, [token]);
+  }, []);
 
   const handleRemoveFromFavorites = async (id: number) => {
     try {
-      await apiRequest(`/ulubione/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      
+      await removeFavorite(id);
       setFavorites(prevFavorites =>
         prevFavorites.filter(favorite => favorite.id !== id)
       );

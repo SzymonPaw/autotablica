@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LoginForm from './auth/LoginForm';
 import RegisterForm from './auth/RegisterForm';
 import './NavBar.css';
+import { REQUIRE_AUTH_EVENT } from '../constants/events';
 
 const NavBar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -13,6 +14,14 @@ const NavBar: React.FC = () => {
     // Tymczasowo: każdy może dodać ogłoszenie
     window.location.href = '/dodaj-ogloszenie';
   };
+
+  useEffect(() => {
+    const handleRequireAuth = () => setActiveModal('login');
+    window.addEventListener(REQUIRE_AUTH_EVENT, handleRequireAuth as EventListener);
+    return () => {
+      window.removeEventListener(REQUIRE_AUTH_EVENT, handleRequireAuth as EventListener);
+    };
+  }, []);
 
   return (
     <nav className="navbar">
@@ -27,6 +36,18 @@ const NavBar: React.FC = () => {
           <button className="btn-highlight" onClick={handleAddListingClick}>
             + Dodaj ogłoszenie
           </button>
+          <Link
+            className="btn-ghost"
+            to="/ulubione"
+            onClick={(event) => {
+              if (!user) {
+                event.preventDefault();
+                setActiveModal('login');
+              }
+            }}
+          >
+            Ulubione
+          </Link>
           {!user ? (
             <>
               <button className="btn-primary" onClick={() => setActiveModal('login')}>

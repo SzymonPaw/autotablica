@@ -4,6 +4,7 @@ import '../App.css';
 import { fetchListingById } from '../api/client';
 import { cleanTitle, titleFromBrandModel } from '../utils/title';
 import { formatMileage, formatPowerKMkW, formatEngineCapacity, mapFuel, mapGearbox, mapDrive, formatDatePL, formatPrice, formatBoolean } from '../utils/format';
+import FavoriteButton from '../components/FavoriteButton';
 
 interface Zdjecie {
   id: number;
@@ -148,7 +149,15 @@ const ProductPage: React.FC = () => {
         </div>
 
         <div className="info">
-          <h1>{computedTitle}</h1>
+          <div className="detail-headline">
+            <h1>{computedTitle}</h1>
+            <FavoriteButton
+              listingId={item.id}
+              variant="button"
+              labelAdd="Dodaj do ulubionych"
+              labelRemove="Usuń z ulubionych"
+            />
+          </div>
           <p className="price"><strong>Cena:</strong> {formatPrice(typeof item.cena === 'string' ? Number(item.cena) : item.cena as number)} </p>
 
           <div className="meta">

@@ -78,6 +78,12 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
 
 export interface PaginatedResponse<T> {
   data: T[];
+  links?: {
+    first: string;
+    last: string;
+    prev: string | null;
+    next: string | null;
+  };
   meta?: {
     current_page: number;
     from: number;
@@ -87,6 +93,11 @@ export interface PaginatedResponse<T> {
     to: number;
     total: number;
   };
+}
+
+export interface FavoritesResponse<T> extends PaginatedResponse<T> {
+  filters?: Record<string, any>;
+  sort?: string[];
 }
 
 export async function fetchListings(params?: Record<string, any>): Promise<PaginatedResponse<any>> {
@@ -107,6 +118,42 @@ export async function fetchListingById(id: number | string): Promise<any> {
   if (id == null) throw new Error('Missing id');
   const response = await apiRequest<any>(`/ogloszenia/${id}`);
   return response.data;
+}
+
+export async function fetchFavoriteListings(params?: Record<string, any>): Promise<FavoritesResponse<any>> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value != null && value !== '') {
+        searchParams.append(key, String(value));
+      }
+    });
+  }
+
+  const query = searchParams.toString();
+  const response = await apiRequest<FavoritesResponse<any>>(`/ulubione${query ? `?${query}` : ''}`);
+  return response.data;
+}
+
+export async function addListingToFavorites(listingId: number | string): Promise<void> {
+  if (listingId == null) {
+    throw new Error('Brak ID ogłoszenia.');
+  }
+
+  await apiRequest(`/ogloszenia/${listingId}/ulubione`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+}
+
+export async function removeListingFromFavorites(listingId: number | string): Promise<void> {
+  if (listingId == null) {
+    throw new Error('Brak ID ogłoszenia.');
+  }
+
+  await apiRequest(`/ogloszenia/${listingId}/ulubione`, {
+    method: 'DELETE',
+  });
 }
 
 export type CreateListingPayload = {

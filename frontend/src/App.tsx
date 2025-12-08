@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { FavoritesProvider } from './contexts/FavoritesContext';
 import NavBar from './components/NavBar';
 import Home from './pages/Home';
 import AllListings from './pages/AllListings';
@@ -85,12 +86,14 @@ const App: React.FC = () => {
 
   return (
     <AuthProvider>
-      <div className="AppRoot">
-        <NavBar />
-        <main className={`container ${isHome ? 'home-full' : ''}`}>
-          <AppRoutes />
-        </main>
-      </div>
+      <FavoritesProvider>
+        <div className="AppRoot">
+          <NavBar />
+          <main className={`container ${isHome ? 'home-full' : ''}`}>
+            <AppRoutes />
+          </main>
+        </div>
+      </FavoritesProvider>
     </AuthProvider>
   );
 };

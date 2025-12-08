@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import './Listing.css';
 import { cleanTitle, titleFromBrandModel } from '../utils/title';
 import { formatPrice } from '../utils/format';
+import FavoriteButton from './FavoriteButton';
 
 interface Zdjecie { id: number; url?: string | null }
 interface Ogloszenie {
@@ -64,6 +65,10 @@ const Listing: React.FC<Props> = ({ items, loading, error }) => {
         const images = Array.isArray(item.zdjecia) ? item.zdjecia.map(z => z?.url).filter(Boolean) as string[] : [];
         return (
           <li key={item.id} className="ogloszenie-item">
+            <FavoriteButton
+              listingId={item.id}
+              className="listing-favorite-button"
+            />
             <button type="button" className="thumb-wrapper" aria-label={title} onClick={() => images.length && openLightbox(images, 0)}>
               {firstPhoto ? (
                 <img className="thumb" src={firstPhoto} alt={title} loading="lazy" decoding="async" />

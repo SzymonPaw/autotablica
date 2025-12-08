@@ -3,6 +3,7 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   /* define a stable nav height so content can be offset correctly */
   --nav-height: 64px;
+  --nav-button-height: 42px;
   height: var(--nav-height);
   padding: 0 1rem;
   display: flex;
@@ -69,9 +70,12 @@
   gap: 1rem;
 }
 
-.btn-primary, .btn-secondary, .btn-highlight {
+.navbar .btn-primary,
+.navbar .btn-secondary,
+.navbar .btn-highlight,
+.navbar .btn-ghost {
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0 1.25rem;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -79,6 +83,21 @@
   text-decoration: none;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  height: var(--nav-button-height, 42px);
+  line-height: 1;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+.btn-ghost {
+  border: 1px solid rgba(44, 62, 80, 0.3);
+  background: transparent;
+  color: #2c3e50;
+}
+
+.btn-ghost:hover {
+  border-color: #2c3e50;
+  background: rgba(44, 62, 80, 0.05);
 }
 
 .btn-primary {

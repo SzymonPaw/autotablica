@@ -310,6 +310,18 @@ button:hover {
 	align-items: start;
 }
 
+.detail-headline {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+.detail-headline .favorite-toggle-container {
+	margin-left: auto;
+}
+
 .gallery .main-image {
 	width: 100%;
 	height: auto;
