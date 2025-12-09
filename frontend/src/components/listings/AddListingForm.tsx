@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { createListing, uploadListingPhotos, fetchBrands, fetchModels, MarkaDto, ModelDto } from '../../api/client';
+import { useNavigate } from 'react-router-dom';
+import { createListing, saveDraftListing, uploadListingPhotos, fetchBrands, fetchModels, MarkaDto, ModelDto } from '../../api/client';
 import './AddListingForm.css';
 
 interface AddListingFormProps {
@@ -35,6 +36,7 @@ interface ListingFormData {
 }
 
 const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<ListingFormData>({
     opis: '',
     cena: '',
@@ -70,6 +72,8 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
   const [models, setModels] = useState<ModelDto[]>([]);
   const [brandsError, setBrandsError] = useState<string | null>(null);
   const [modelsError, setModelsError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isAdditionalInfoExpanded, setIsAdditionalInfoExpanded] = useState(false);
 
   // Load brands on mount
   useEffect(() => {
@@ -102,6 +106,50 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
     return parts.join(' ').trim();
   }, [selectedBrand, selectedModel]);
 
+  // Generuj listę lat od aktualnego roku do 1900
+  const years = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const yearList: number[] = [];
+    for (let year = currentYear; year >= 1900; year--) {
+      yearList.push(year);
+    }
+    return yearList;
+  }, []);
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+    if (files.length > 0) {
+      const existingCount = formData.zdjecia.length;
+      const availableSlots = 10 - existingCount;
+      const filesToAdd = files.slice(0, availableSlots);
+      
+      setFormData(prev => ({
+        ...prev,
+        zdjecia: [...prev.zdjecia, ...filesToAdd]
+      }));
+
+      if (files.length > availableSlots) {
+        alert(`Możesz dodać maksymalnie 10 zdjęć. Dodano ${filesToAdd.length} z ${files.length} upuszczonych plików.`);
+      }
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     
@@ -132,46 +180,119 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
     }
   };
 
+  const buildPayload = () => {
+    // Przelicz pojemność silnika: jeśli użytkownik podał w cm³ (np. 2500),
+    // zamieniamy na litry (2.5), bo backend trzyma decimal(5,2) w litrach.
+    const rawCap = formData.pojemnosc_silnika ? Number(formData.pojemnosc_silnika) : 0;
+    const pojemnoscLitry = rawCap > 50 ? Math.round((rawCap / 1000) * 100) / 100 : rawCap; // zaokrąglij do 2 miejsc
+
+    return {
+      tytul: computedTitle || 'Ogłoszenie',
+      opis: formData.opis.trim(),
+      cena: formData.cena ? Number(formData.cena) : 0,
+      marka_id: formData.marka_id ? Number(formData.marka_id) : 0,
+      model_id: formData.model_id ? Number(formData.model_id) : 0,
+      rok_produkcji: formData.rok_produkcji ? Number(formData.rok_produkcji) : null,
+      vin: formData.vin.trim(),
+      numer_rejestracyjny: formData.numer_rejestracyjny.trim(),
+      data_pierwszej_rej: formData.data_pierwszej_rej,
+      przebieg: formData.przebieg ? Number(formData.przebieg) : 0,
+      moc_silnika: formData.moc_silnika ? Number(formData.moc_silnika) : null,
+      naped: formData.naped || null,
+      liczba_drzwi: formData.liczba_drzwi ? Number(formData.liczba_drzwi) : null,
+      liczba_miejsc: formData.liczba_miejsc ? Number(formData.liczba_miejsc) : null,
+      kolor: formData.kolor || null,
+      metalik: !!formData.metalik,
+      stan: formData.stan || null,
+      wypadkowy: !!formData.wypadkowy,
+      zarejestrowany_w_polsce: !!formData.zarejestrowany_w_polsce,
+      pierwszy_wlasciciel: !!formData.pierwszy_wlasciciel,
+      serwisowany_w_aso: !!formData.serwisowany_w_aso,
+      bezwypadkowy: !!formData.bezwypadkowy,
+      rodzaj_paliwa: formData.rodzaj_paliwa,
+      skrzynia_biegow: formData.skrzynia_biegow,
+      pojemnosc_silnika: pojemnoscLitry || 0,
+      status: 'aktywny',
+    };
+  };
+
+  const buildDraftPayload = () => {
+    // Dla szkiców wszystkie pola są opcjonalne
+    const rawCap = formData.pojemnosc_silnika ? Number(formData.pojemnosc_silnika) : null;
+    const pojemnoscLitry = rawCap && rawCap > 50 ? Math.round((rawCap / 1000) * 100) / 100 : rawCap;
+
+    return {
+      tytul: computedTitle || null,
+      opis: formData.opis.trim() || null,
+      cena: formData.cena ? Number(formData.cena) : null,
+      marka_id: formData.marka_id ? Number(formData.marka_id) : null,
+      model_id: formData.model_id ? Number(formData.model_id) : null,
+      rok_produkcji: formData.rok_produkcji ? Number(formData.rok_produkcji) : null,
+      vin: formData.vin.trim() || null,
+      numer_rejestracyjny: formData.numer_rejestracyjny.trim() || null,
+      data_pierwszej_rej: formData.data_pierwszej_rej || null,
+      przebieg: formData.przebieg ? Number(formData.przebieg) : null,
+      moc_silnika: formData.moc_silnika ? Number(formData.moc_silnika) : null,
+      naped: formData.naped || null,
+      liczba_drzwi: formData.liczba_drzwi ? Number(formData.liczba_drzwi) : null,
+      liczba_miejsc: formData.liczba_miejsc ? Number(formData.liczba_miejsc) : null,
+      kolor: formData.kolor || null,
+      metalik: formData.metalik || null,
+      stan: formData.stan || null,
+      wypadkowy: formData.wypadkowy || null,
+      zarejestrowany_w_polsce: formData.zarejestrowany_w_polsce || null,
+      pierwszy_wlasciciel: formData.pierwszy_wlasciciel || null,
+      serwisowany_w_aso: formData.serwisowany_w_aso || null,
+      bezwypadkowy: formData.bezwypadkowy || null,
+      rodzaj_paliwa: formData.rodzaj_paliwa || null,
+      skrzynia_biegow: formData.skrzynia_biegow || null,
+      pojemnosc_silnika: pojemnoscLitry,
+    };
+  };
+
+  const saveDraft = async () => {
+    setError(null);
+    
+    // Minimalna walidacja dla szkicu - wymagamy marki i modelu
+    if (!formData.marka_id || !formData.model_id) {
+      setError('Aby zapisać szkic, musisz wybrać przynajmniej markę i model pojazdu.');
+      return;
+    }
+    
+    setIsSubmitting(true);
+
+    try {
+      const payload = buildDraftPayload();
+      
+      const created = await saveDraftListing(payload);
+      const newId = Number(created?.id ?? 0);
+      
+      // Nie próbujemy uploadować zdjęć do szkicu - to wymaga osobnej implementacji
+      // if (newId > 0 && formData.zdjecia.length > 0) {
+      //   try {
+      //     await uploadListingPhotos(newId, formData.zdjecia);
+      //   } catch (uploadErr) {
+      //     console.warn('Upload zdjęć do szkicu nie powiódł się:', uploadErr);
+      //   }
+      // }
+      
+      alert('Szkic ogłoszenia został zapisany!');
+      // Przekieruj do panelu klienta, zakładka ogłoszeń z widokiem szkiców
+      navigate('/panel-klienta?tab=listings&view=drafts');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Wystąpił błąd podczas zapisywania szkicu.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
 
     try {
-      // Przelicz pojemność silnika: jeśli użytkownik podał w cm³ (np. 2500),
-      // zamieniamy na litry (2.5), bo backend trzyma decimal(5,2) w litrach.
-      const rawCap = formData.pojemnosc_silnika ? Number(formData.pojemnosc_silnika) : 0;
-      const pojemnoscLitry = rawCap > 50 ? Math.round((rawCap / 1000) * 100) / 100 : rawCap; // zaokrąglij do 2 miejsc
-
-      const payload = {
-        tytul: computedTitle || 'Ogłoszenie',
-        opis: formData.opis.trim(),
-        cena: Number(formData.cena),
-        marka_id: Number(formData.marka_id),
-        model_id: Number(formData.model_id),
-        rok_produkcji: formData.rok_produkcji ? Number(formData.rok_produkcji) : null,
-        vin: formData.vin.trim(),
-        numer_rejestracyjny: formData.numer_rejestracyjny.trim(),
-        data_pierwszej_rej: formData.data_pierwszej_rej, // oczekiwany format YYYY-MM-DD
-        przebieg: Number(formData.przebieg),
-        moc_silnika: formData.moc_silnika ? Number(formData.moc_silnika) : null,
-        naped: formData.naped || null,
-        liczba_drzwi: formData.liczba_drzwi ? Number(formData.liczba_drzwi) : null,
-        liczba_miejsc: formData.liczba_miejsc ? Number(formData.liczba_miejsc) : null,
-        kolor: formData.kolor || null,
-        metalik: !!formData.metalik,
-        stan: formData.stan || null,
-        wypadkowy: !!formData.wypadkowy,
-        zarejestrowany_w_polsce: !!formData.zarejestrowany_w_polsce,
-        pierwszy_wlasciciel: !!formData.pierwszy_wlasciciel,
-        serwisowany_w_aso: !!formData.serwisowany_w_aso,
-        bezwypadkowy: !!formData.bezwypadkowy,
-        rodzaj_paliwa: formData.rodzaj_paliwa,
-        skrzynia_biegow: formData.skrzynia_biegow,
-        // Kolumna w DB nie jest nullable, zapisujemy w litrach (np. 2.5)
-        pojemnosc_silnika: pojemnoscLitry,
-        status: 'aktywny',
-      } as const;
+      const payload = buildPayload();
 
       const created = await createListing(payload);
       const newId = Number(created?.id ?? 0);
@@ -217,76 +338,16 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="add-listing-form">
+    <div className="add-listing-page">
+      <form onSubmit={handleSubmit} className="add-listing-form">
       <h2>Dodaj nowe ogłoszenie</h2>
 
       {error && <div className="error-message">{error}</div>}
 
-      {/* Sekcja podstawowych informacji (cena) */}
-      <section className="form-section">
-        <h3>Podstawowe informacje</h3>
-        <div className="form-group">
-          <label htmlFor="cena">Cena (PLN)</label>
-          <input
-            type="number"
-            id="cena"
-            name="cena"
-            value={formData.cena}
-            onChange={handleChange}
-            required
-            min="0"
-            step="0.01"
-          />
-        </div>
-      </section>
-
-      {/* Sekcja zdjęć */}
-      <section className="form-section">
-        <h3>Zdjęcia</h3>
-        <div className="form-group">
-          <label htmlFor="zdjecia">Dodaj zdjęcia (max. 10)</label>
-          <input
-            type="file"
-            id="zdjecia"
-            name="zdjecia"
-            onChange={handleChange}
-            accept="image/*"
-            multiple
-            max="10"
-          />
-          {photosError && (
-            <div className="error-message" style={{ marginTop: 8 }}>
-              {photosError}
-            </div>
-          )}
-          <div className="file-preview">
-            {formData.zdjecia.map((file, index) => (
-              <div key={index} className="preview-item">
-                <img src={URL.createObjectURL(file)} alt={`Podgląd ${index + 1}`} />
-                <button type="button" onClick={() => {
-                  setFormData(prev => ({
-                    ...prev,
-                    zdjecia: prev.zdjecia.filter((_, i) => i !== index)
-                  }));
-                }}>Usuń</button>
-              </div>
-            ))}
-          </div>
-          {createdId && photosError && (
-            <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button type="button" onClick={retryUpload} disabled={isSubmitting}>
-                {isSubmitting ? 'Ponawianie...' : 'Spróbuj wysłać zdjęcia ponownie'}
-              </button>
-              <a href={`/ogloszenie/${createdId}`} style={{ color: '#3498db' }}>Przejdź do ogłoszenia bez zdjęć</a>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Sekcja informacji o pojeździe */}
+      {/* Sekcja informacji o pojeździe (przenieione na początek) */}
       <section className="form-section">
         <h3>Informacje o pojeździe</h3>
-        
+
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="marka_id">Marka</label>
@@ -337,16 +398,18 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="rok_produkcji">Rok produkcji</label>
-            <input
-              type="number"
+            <select
               id="rok_produkcji"
               name="rok_produkcji"
               value={formData.rok_produkcji}
               onChange={handleChange}
               required
-              min="1900"
-              max={new Date().getFullYear()}
-            />
+            >
+              <option value="">Wybierz rok produkcji</option>
+              {years.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
           </div>
 
           <div className="form-group">
@@ -381,7 +444,7 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
       {/* Sekcja specyfikacji technicznej */}
       <section className="form-section">
         <h3>Specyfikacja techniczna</h3>
-        
+
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="rodzaj_paliwa">Rodzaj paliwa</label>
@@ -485,9 +548,9 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
         </div>
       </section>
 
-      {/* Sekcja dodatkowych informacji */}
+      {/* Sekcja statusu pojazdu */}
       <section className="form-section">
-        <h3>Dodatkowe informacje</h3>
+        <h3>Status pojazdu</h3>
         
         <div className="form-row">
           <div className="form-group">
@@ -545,56 +608,158 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
           </div>
         </div>
 
-        <div className="checkboxes-group">
-          <label>
-            <input
-              type="checkbox"
-              name="metalik"
-              checked={formData.metalik}
-              onChange={handleChange}
-            />
-            Lakier metalik
-          </label>
+        <div className="additional-info-toggle">
+          <button
+            type="button"
+            className="toggle-button"
+            onClick={() => setIsAdditionalInfoExpanded(!isAdditionalInfoExpanded)}
+          >
+            <span>Status pojazdu</span>
+            <svg
+              className={`toggle-icon ${isAdditionalInfoExpanded ? 'expanded' : ''}`}
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          {isAdditionalInfoExpanded && (
+            <div className="checkboxes-group">
+              <label>
+                <input
+                  type="checkbox"
+                  name="metalik"
+                  checked={formData.metalik}
+                  onChange={handleChange}
+                />
+                Lakier metalik
+              </label>
 
-          <label>
-            <input
-              type="checkbox"
-              name="bezwypadkowy"
-              checked={formData.bezwypadkowy}
-              onChange={handleChange}
-            />
-            Bezwypadkowy
-          </label>
+              <label>
+                <input
+                  type="checkbox"
+                  name="bezwypadkowy"
+                  checked={formData.bezwypadkowy}
+                  onChange={handleChange}
+                />
+                Bezwypadkowy
+              </label>
 
-          <label>
-            <input
-              type="checkbox"
-              name="pierwszy_wlasciciel"
-              checked={formData.pierwszy_wlasciciel}
-              onChange={handleChange}
-            />
-            Pierwszy właściciel
-          </label>
+              <label>
+                <input
+                  type="checkbox"
+                  name="pierwszy_wlasciciel"
+                  checked={formData.pierwszy_wlasciciel}
+                  onChange={handleChange}
+                />
+                Pierwszy właściciel
+              </label>
 
-          <label>
-            <input
-              type="checkbox"
-              name="serwisowany_w_aso"
-              checked={formData.serwisowany_w_aso}
-              onChange={handleChange}
-            />
-            Serwisowany w ASO
-          </label>
+              <label>
+                <input
+                  type="checkbox"
+                  name="serwisowany_w_aso"
+                  checked={formData.serwisowany_w_aso}
+                  onChange={handleChange}
+                />
+                Serwisowany w ASO
+              </label>
 
-          <label>
-            <input
-              type="checkbox"
-              name="zarejestrowany_w_polsce"
-              checked={formData.zarejestrowany_w_polsce}
-              onChange={handleChange}
-            />
-            Zarejestrowany w Polsce
-          </label>
+              <label>
+                <input
+                  type="checkbox"
+                  name="zarejestrowany_w_polsce"
+                  checked={formData.zarejestrowany_w_polsce}
+                  onChange={handleChange}
+                />
+                Zarejestrowany w Polsce
+              </label>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Sekcja zdjęć (przeniesione bliżej końca) */}
+      <section className="form-section">
+        <h3>Zdjęcia</h3>
+        <div className="form-group">
+          <label>Dodaj zdjęcia</label>
+          <div 
+            className={`drop-zone ${isDragging ? 'dragging' : ''}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => document.getElementById('zdjecia')?.click()}
+          >
+            <div className="drop-zone-content">
+              <svg className="drop-zone-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <p className="drop-zone-text">
+                <strong>Kliknij, aby wybrać</strong> lub upuść pliki
+              </p>
+              <p className="drop-zone-hint">Możesz dodać maksymalnie 10 zdjęć w formatach PNG, JPG, JPEG</p>
+            </div>
+          </div>
+          <input
+            type="file"
+            id="zdjecia"
+            name="zdjecia"
+            onChange={handleChange}
+            accept="image/*"
+            multiple
+            style={{ display: 'none' }}
+          />
+          {photosError && (
+            <div className="error-message" style={{ marginTop: 8 }}>
+              {photosError}
+            </div>
+          )}
+          <div className="file-preview">
+            {formData.zdjecia.map((file, index) => (
+              <div key={index} className="preview-item">
+                <img src={URL.createObjectURL(file)} alt={`Podgląd ${index + 1}`} />
+                <button type="button" onClick={() => {
+                  setFormData(prev => ({
+                    ...prev,
+                    zdjecia: prev.zdjecia.filter((_, i) => i !== index)
+                  }));
+                }}>Usuń</button>
+              </div>
+            ))}
+          </div>
+          {createdId && photosError && (
+            <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button type="button" onClick={retryUpload} disabled={isSubmitting}>
+                {isSubmitting ? 'Ponawianie...' : 'Spróbuj wysłać zdjęcia ponownie'}
+              </button>
+              <a href={`/ogloszenie/${createdId}`} style={{ color: '#3498db' }}>Przejdź do ogłoszenia bez zdjęć</a>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Sekcja podstawowych informacji (cena) (przeniesiona przed opis) */}
+      <section className="form-section">
+        <h3>Podstawowe informacje</h3>
+        <div className="form-group">
+          <label htmlFor="cena">Cena (PLN)</label>
+          <input
+            type="number"
+            id="cena"
+            name="cena"
+            value={formData.cena}
+            onChange={handleChange}
+            required
+            min="0"
+            step="0.01"
+          />
         </div>
       </section>
 
@@ -614,10 +779,21 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
         </div>
       </section>
 
-      <button type="submit" className="submit-button" disabled={isSubmitting}>
-        {isSubmitting ? 'Dodawanie...' : 'Dodaj ogłoszenie'}
-      </button>
-    </form>
+      <div className="form-actions">
+        <button 
+          type="button" 
+          className="draft-button" 
+          onClick={saveDraft}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Zapisywanie...' : 'Zapisz wersję roboczą'}
+        </button>
+        <button type="submit" className="submit-button add-listing-button" disabled={isSubmitting}>
+          {isSubmitting ? 'Dodawanie...' : 'Dodaj ogłoszenie'}
+        </button>
+      </div>
+      </form>
+    </div>
   );
 };
 

@@ -9,6 +9,7 @@ use App\Http\Resources\OgloszenieCollection;
 use App\Http\Resources\OgloszenieResource;
 use App\Models\Ogloszenie;
 use App\Models\User;
+use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -132,12 +133,34 @@ class OgloszenieController extends Controller
         ]);
     }
 
+    public function my(Request $request)
+    {
+        $user = $request->user();
+
+        $listings = Ogloszenie::query()
+            ->where('uzytkownik_id', $user?->id)
+            ->with(['marka', 'modelPojazdu', 'zdjecia'])
+            ->latest('created_at')
+            ->get();
+
+        return OgloszenieResource::collection($listings);
+    }
+
     public function store(StoreOgloszenieRequest $request): JsonResponse
     {
         $payload = $request->validated();
 
-        // Ustal użytkownika. Jeśli brak zalogowanego, użyj/utwórz konto gościa.
+        // Ustal użytkownika. Najpierw spróbuj z bearer tokenu Sanctum (endpoint jest publiczny),
+        // a jeśli brak, użyj/utwórz konto gościa.
         $user = $request->user();
+
+        if (! $user && $request->bearerToken()) {
+            $token = PersonalAccessToken::findToken($request->bearerToken());
+            if ($token && $token->tokenable instanceof User) {
+                $user = $token->tokenable;
+            }
+        }
+
         if (! $user) {
             $user = User::firstOrCreate(
                 ['email' => 'guest@autotablica.local'],

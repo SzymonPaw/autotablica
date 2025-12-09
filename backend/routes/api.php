@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OgloszenieController;
 use App\Http\Controllers\Api\SlownikController;
+use App\Http\Controllers\Api\SzkicOgloszeniaController;
 use App\Http\Controllers\Api\UlubioneController;
 use App\Http\Controllers\Api\ZdjecieController;
 use Illuminate\Support\Facades\Route;
@@ -19,7 +20,8 @@ Route::prefix('auth')->group(function (): void {
 });
 
 Route::get('ogloszenia', [OgloszenieController::class, 'index']);
-Route::get('ogloszenia/{ogloszenie}', [OgloszenieController::class, 'show']);
+Route::get('ogloszenia/{ogloszenie}', [OgloszenieController::class, 'show'])
+    ->whereNumber('ogloszenie');
 
 Route::prefix('slowniki')->group(function (): void {
     Route::get('marki', [SlownikController::class, 'marki']);
@@ -30,7 +32,15 @@ Route::prefix('slowniki')->group(function (): void {
 Route::post('ogloszenia', [OgloszenieController::class, 'store']);
 Route::post('ogloszenia/{ogloszenie}/zdjecia', [ZdjecieController::class, 'store'])->middleware('throttle:upload-images');
 
+// Szkice ogłoszeń - tymczasowo publiczne
+Route::get('szkice-ogloszen', [SzkicOgloszeniaController::class, 'index']);
+Route::post('szkice-ogloszen', [SzkicOgloszeniaController::class, 'store']);
+Route::get('szkice-ogloszen/{szkicOgloszenia}', [SzkicOgloszeniaController::class, 'show']);
+Route::patch('szkice-ogloszen/{szkicOgloszenia}', [SzkicOgloszeniaController::class, 'update']);
+Route::delete('szkice-ogloszen/{szkicOgloszenia}', [SzkicOgloszeniaController::class, 'destroy']);
+
 Route::middleware('auth:sanctum')->group(function (): void {
+    Route::get('ogloszenia/moje', [OgloszenieController::class, 'my']);
     Route::patch('ogloszenia/{ogloszenie}', [OgloszenieController::class, 'update']);
     Route::delete('ogloszenia/{ogloszenie}', [OgloszenieController::class, 'destroy']);
 

@@ -1,55 +1,65 @@
 .client-panel {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   width: 100%;
-  padding-bottom: 48px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 16px 12px 48px;
 }
 
 .client-panel__header {
-  background: linear-gradient(135deg, #141b2d, #26385f);
+  background: linear-gradient(135deg, #e8f1ff 0%, #ffffff 60%);
+  border: 1px solid #e4ebf5;
   border-radius: 16px;
-  padding: 32px;
-  color: #fff;
+  padding: 28px 32px;
+  color: #1f2937;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
 }
 
 .client-panel__eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #2563eb;
   margin: 0 0 8px;
+  font-weight: 700;
 }
 
 .client-panel__subtitle {
   margin: 8px 0 0;
-  color: rgba(255, 255, 255, 0.85);
+  color: #4b5563;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e4ebf5;
 }
 
 .client-panel__tabs {
   display: inline-flex;
-  gap: 12px;
-  background: #f0f2f7;
+  gap: 8px;
+  background: #fff;
   padding: 8px;
-  border-radius: 999px;
+  border-radius: 12px;
+  border: 1px solid #e4ebf5;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
   width: fit-content;
 }
 
 .client-panel__tabs button {
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
-  padding: 10px 20px;
-  border-radius: 999px;
+  padding: 10px 18px;
+  border-radius: 10px;
   font-weight: 600;
-  color: #4b5563;
+  color: #374151;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .client-panel__tabs button.active {
-  background: #fff;
-  color: #111827;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+  background: #2563eb;
+  color: #fff;
+  border-color: #1d4ed8;
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3);
 }
 
 .client-panel__content {
@@ -58,14 +68,15 @@
 
 .client-panel__card {
   background: #fff;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  padding: 28px;
+  border: 1px solid #e4ebf5;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .client-panel__card.danger {
-  border: 1px solid #fee2e2;
-  background: #fff7f7;
+  border: 1px solid #fecdd3;
+  background: #fff5f7;
 }
 
 .client-panel__helper {
@@ -97,8 +108,8 @@
 .client-panel__details-row dd {
   margin: 0;
   font-size: 18px;
-  font-weight: 500;
-  color: #111827;
+  font-weight: 600;
+  color: #1f2937;
 }
 
 .client-panel__error {
@@ -108,18 +119,19 @@
 }
 
 .btn-danger {
-  background: #dc2626;
-  border: none;
+  background: #ef4444;
+  border: 1px solid #dc2626;
   color: #fff;
   padding: 12px 24px;
-  border-radius: 999px;
+  border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, transform 0.1s ease;
 }
 
 .btn-danger:hover:enabled {
-  background: #b91c1c;
+  background: #dc2626;
+  transform: translateY(-1px);
 }
 
 .btn-danger:disabled {
@@ -128,6 +140,10 @@
 }
 
 @media (max-width: 768px) {
+  .client-panel {
+    padding: 12px 10px 36px;
+  }
+
   .client-panel__tabs {
     width: 100%;
     flex-wrap: wrap;
@@ -136,5 +152,14 @@
 
   .client-panel__tabs button {
     flex: 1 1 45%;
+    text-align: center;
+  }
+
+  .client-panel__header {
+    padding: 22px 20px;
+  }
+
+  .client-panel__card {
+    padding: 22px;
   }
 }

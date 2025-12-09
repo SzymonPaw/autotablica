@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingScreen from '../components/common/LoadingScreen';
 import MyListings from './MyListings';
@@ -9,10 +9,19 @@ type ClientPanelTab = 'listings' | 'profile' | 'account';
 
 const ClientPanel: React.FC = () => {
   const { user, isLoading, deleteAccount } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<ClientPanelTab>('listings');
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const navigate = useNavigate();
+
+  // Odczytaj parametr tab z URL przy montowaniu
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['listings', 'profile', 'account'].includes(tabParam)) {
+      setActiveTab(tabParam as ClientPanelTab);
+    }
+  }, [searchParams]);
 
   const profileFields = useMemo(() => {
     if (!user) {

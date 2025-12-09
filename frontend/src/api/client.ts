@@ -210,6 +210,42 @@ export async function createListing(payload: CreateListingPayload): Promise<any>
   return response.data;
 }
 
+// Szkice ogłoszeń
+export async function saveDraftListing(payload: any): Promise<any> {
+  const response = await apiRequest<any>(`/szkice-ogloszen`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return response.data;
+}
+
+export async function fetchDrafts(): Promise<any[]> {
+  const response = await apiRequest<any[]>(`/szkice-ogloszen`);
+  return response.data;
+}
+
+export async function fetchDraftById(id: number | string): Promise<any> {
+  if (id == null) throw new Error('Missing id');
+  const response = await apiRequest<any>(`/szkice-ogloszen/${id}`);
+  return response.data;
+}
+
+export async function updateDraft(id: number | string, payload: any): Promise<any> {
+  if (id == null) throw new Error('Missing id');
+  const response = await apiRequest<any>(`/szkice-ogloszen/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+  return response.data;
+}
+
+export async function deleteDraft(id: number | string): Promise<void> {
+  if (id == null) throw new Error('Missing id');
+  await apiRequest(`/szkice-ogloszen/${id}`, {
+    method: 'DELETE',
+  });
+}
+
 export async function uploadListingPhotos(listingId: number | string, files: File[]): Promise<any> {
   if (!listingId) throw new Error('Brak ID ogłoszenia');
   if (!Array.isArray(files) || files.length === 0) return [];

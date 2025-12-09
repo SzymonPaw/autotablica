@@ -1,31 +1,42 @@
+.add-listing-page {
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
 .add-listing-form {
   width: 100%;
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .add-listing-form h2 {
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #eee;
   color: #2c3e50;
-  text-align: center;
-  font-size: 1.75rem;
+  text-align: left;
+  font-size: 1.5rem;
 }
 
 .add-listing-form h3 {
   color: #34495e;
-  margin: 0 0 1.5rem;
+  margin: 0 0 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid #3498db;
-  font-size: 1.25rem;
+  border-bottom: 1px solid #eee;
+  font-size: 1.05rem;
 }
 
 .form-section {
-  background: #f8f9fa;
+  background: transparent;
   border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  padding: 1rem 0 1.5rem 0;
+  margin-bottom: 1.5rem;
 }
 
 .file-preview {
@@ -43,18 +54,18 @@
   width: 100%;
   height: 150px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .preview-item button {
   position: absolute;
   top: 5px;
   right: 5px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   border: none;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -79,14 +90,14 @@
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .form-group label {
@@ -102,9 +113,9 @@
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #bdc3c7;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 1rem;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.15s;
 }
 
 .form-group input:focus,
@@ -112,6 +123,7 @@
 .form-group textarea:focus {
   outline: none;
   border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52,152,219,0.07);
 }
 
 .form-group textarea {
@@ -122,29 +134,194 @@
 .error-message {
   background-color: #e74c3c;
   color: white;
-  padding: 1rem;
-  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
   margin-bottom: 1rem;
 }
 
 .submit-button {
   width: 100%;
-  padding: 1rem;
-  background-color: #3498db;
+  padding: 0.9rem;
+  background-color: #27ae60; /* dopasowanie do przycisku dodaj ogłoszenie na stronie głównej */
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.08s;
+  box-shadow: 0 2px 4px rgba(39, 174, 96, 0.15);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .submit-button:hover:not(:disabled) {
-  background-color: #2980b9;
+  background-color: #219a52;
+  transform: translateY(-1px);
 }
 
 .submit-button:disabled {
   background-color: #bdc3c7;
   cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  .add-listing-form {
+    padding: 1rem;
+    border-radius: 10px;
+  }
+}
+
+/* Drag and drop zone */
+.drop-zone {
+  border: 2px dashed #bdc3c7;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+  margin-bottom: 1rem;
+}
+
+.drop-zone:hover {
+  border-color: #3498db;
+  background: #ecf5ff;
+}
+
+.drop-zone.dragging {
+  border-color: #27ae60;
+  background: #e8f8f0;
+  border-style: solid;
+}
+
+.drop-zone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.drop-zone-icon {
+  color: #7f8c8d;
+  transition: color 0.3s ease;
+}
+
+.drop-zone:hover .drop-zone-icon {
+  color: #3498db;
+}
+
+.drop-zone.dragging .drop-zone-icon {
+  color: #27ae60;
+}
+
+.drop-zone-text {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 0.95rem;
+}
+
+.drop-zone-text strong {
+  color: #3498db;
+}
+
+.drop-zone-hint {
+  margin: 0;
+  color: #7f8c8d;
+  font-size: 0.85rem;
+}
+
+/* Additional info toggle */
+.additional-info-toggle {
+  margin-top: 1.5rem;
+}
+
+.toggle-button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  border-top: 1px solid #e1e8ed;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.toggle-button:hover {
+  background: #ecf0f1;
+  border-color: #bdc3c7;
+}
+
+.toggle-icon {
+  transition: transform 0.3s ease;
+  color: #7f8c8d;
+}
+
+.toggle-icon.expanded {
+  transform: rotate(180deg);
+}
+
+.additional-info-toggle .checkboxes-group {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+/* Form actions (przyciski na dole formularza) */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: center;
+}
+
+.draft-button {
+  flex: 1;
+  padding: 0.9rem;
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.08s;
+  box-shadow: 0 2px 4px rgba(0, 102, 204, 0.15);
+}
+
+.draft-button:hover:not(:disabled) {
+  background-color: #0052a3;
+  transform: translateY(-1px);
+}
+
+.draft-button:disabled {
+  background-color: #99c2ff;
+  cursor: not-allowed;
+}
+
+.form-actions .submit-button {
+  flex: 1;
+}
+
+@media (max-width: 600px) {
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .form-actions .submit-button,
+  .draft-button {
+    flex: 1;
+    width: 100%;
+  }
 }

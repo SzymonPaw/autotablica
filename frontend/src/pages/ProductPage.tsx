@@ -111,13 +111,13 @@ const ProductPage: React.FC = () => {
   if (!item) return <p className="empty">Brak ogłoszenia.</p>;
 
   return (
-    <>
-      <div style={{marginTop: '70px', marginBottom: '0.75rem'}}>
-        <Link to="/" className="back-link" style={{textDecoration: 'none', color: '#3498db'}}>
+    <div className="product-page-wrapper">
+      <div style={{marginTop: '12px', marginBottom: '0.75rem'}}>
+        <Link to="/" className="back-link">
           ← Wróć na stronę główną
         </Link>
       </div>
-      <article className="ogloszenie-detail card">
+      <article className="ogloszenie-detail">
       <div className="detail-grid">
         <div className="gallery">
           {main ? (
@@ -165,44 +165,45 @@ const ProductPage: React.FC = () => {
             <p><strong>Model:</strong> {item.model?.nazwa ?? '—'}</p>
           </div>
 
-          <section className="spec">
-            <h3>Specyfikacja</h3>
-            <dl className="ogloszenie-details">
-              <div><dt>VIN</dt><dd>{item.vin ?? '—'}</dd></div>
-              <div><dt>Nr rejestracyjny</dt><dd>{item.numer_rejestracyjny ?? '—'}</dd></div>
-              <div><dt>Data I rejestracji</dt><dd>{formatDatePL(item.data_pierwszej_rej as string)}</dd></div>
-              <div><dt>Rok produkcji</dt><dd>{item.rok_produkcji ?? '—'}</dd></div>
-              <div><dt>Przebieg</dt><dd>{formatMileage(item.przebieg as number)}</dd></div>
-              <div><dt>Rodzaj paliwa</dt><dd>{mapFuel(item.rodzaj_paliwa as string)}</dd></div>
-              <div><dt>Skrzynia biegów</dt><dd>{mapGearbox(item.skrzynia_biegow as string)}</dd></div>
-              <div><dt>Poj. silnika</dt><dd>{formatEngineCapacity(item.pojemnosc_silnika as number)}</dd></div>
-              <div><dt>Moc</dt><dd>{formatPowerKMkW(item.moc_silnika as number)}</dd></div>
-              <div><dt>Napęd</dt><dd>{mapDrive(item.naped as string)}</dd></div>
-              <div><dt>Liczba drzwi</dt><dd>{item.liczba_drzwi ?? '—'}</dd></div>
-              <div><dt>Liczba miejsc</dt><dd>{item.liczba_miejsc ?? '—'}</dd></div>
-              <div><dt>Kolor</dt><dd>{item.kolor ?? '—'}</dd></div>
-              <div><dt>Metalik</dt><dd>{formatBoolean(item.metalik as boolean)}</dd></div>
-              <div><dt>Stan</dt><dd>{item.stan ?? '—'}</dd></div>
-              <div><dt>Wypadkowy</dt><dd>{formatBoolean(item.wypadkowy as boolean)}</dd></div>
-              <div><dt>Zarejestrowany w PL</dt><dd>{formatBoolean(item.zarejestrowany_w_polsce as boolean)}</dd></div>
-              <div><dt>Pierwszy właściciel</dt><dd>{formatBoolean(item.pierwszy_wlasciciel as boolean)}</dd></div>
-              <div><dt>Serwisowany w ASO</dt><dd>{formatBoolean(item.serwisowany_w_aso as boolean)}</dd></div>
-              <div><dt>Bezwypadkowy</dt><dd>{formatBoolean(item.bezwypadkowy as boolean)}</dd></div>
-            </dl>
-          </section>
-
-          <section className="description">
-            <h3>Opis</h3>
-            <p>{item.opis ?? 'Brak opisu.'}</p>
-          </section>
-
           <section className="contact">
             <h3>Kontakt</h3>
             <p>Kontakt do sprzedawcy pojawi się tutaj (do zaimplementowania).</p>
           </section>
-
-          <p className="timestamp">Dodano: {item.created_at ? new Date(item.created_at).toLocaleString() : '—'}</p>
         </div>
+      </div>
+      <div className="detail-sections">
+        <section className="spec">
+          <h3>Specyfikacja</h3>
+          <dl className="ogloszenie-details">
+            <div><dt>Rok produkcji</dt><dd>{item.rok_produkcji ?? '—'}</dd></div>
+            <div><dt>Rodzaj paliwa</dt><dd>{mapFuel(item.rodzaj_paliwa as string)}</dd></div>
+            <div><dt>Poj. silnika</dt><dd>{formatEngineCapacity(item.pojemnosc_silnika as number)}</dd></div>
+            <div><dt>Moc</dt><dd>{formatPowerKMkW(item.moc_silnika as number)}</dd></div>
+            <div><dt>Napęd</dt><dd>{mapDrive(item.naped as string)}</dd></div>
+            <div><dt>VIN</dt><dd>{item.vin ?? '—'}</dd></div>
+            <div><dt>Nr rejestracyjny</dt><dd>{item.numer_rejestracyjny ?? '—'}</dd></div>
+            <div><dt>Data I rejestracji</dt><dd>{formatDatePL(item.data_pierwszej_rej as string)}</dd></div>
+            <div><dt>Przebieg</dt><dd>{formatMileage(item.przebieg as number)}</dd></div>
+            <div><dt>Skrzynia biegów</dt><dd>{mapGearbox(item.skrzynia_biegow as string)}</dd></div>
+            <div><dt>Liczba drzwi</dt><dd>{item.liczba_drzwi ?? '—'}</dd></div>
+            <div><dt>Liczba miejsc</dt><dd>{item.liczba_miejsc ?? '—'}</dd></div>
+            <div><dt>Kolor</dt><dd>{item.kolor ?? '—'}</dd></div>
+            <div><dt>Metalik</dt><dd>{formatBoolean(item.metalik as boolean)}</dd></div>
+            <div><dt>Stan</dt><dd>{item.stan ?? '—'}</dd></div>
+            <div><dt>Wypadkowy</dt><dd>{formatBoolean(item.wypadkowy as boolean)}</dd></div>
+            <div><dt>Zarejestrowany w PL</dt><dd>{formatBoolean(item.zarejestrowany_w_polsce as boolean)}</dd></div>
+            <div><dt>Pierwszy właściciel</dt><dd>{formatBoolean(item.pierwszy_wlasciciel as boolean)}</dd></div>
+            <div><dt>Serwisowany w ASO</dt><dd>{formatBoolean(item.serwisowany_w_aso as boolean)}</dd></div>
+            <div><dt>Bezwypadkowy</dt><dd>{formatBoolean(item.bezwypadkowy as boolean)}</dd></div>
+          </dl>
+        </section>
+
+        <section className="description">
+          <h3>Opis</h3>
+          <p>{item.opis ?? 'Brak opisu.'}</p>
+        </section>
+
+        <p className="timestamp">Dodano: {item.created_at ? new Date(item.created_at).toLocaleString() : '—'}</p>
       </div>
     </article>
     {lightboxOpen && images.length > 0 && (
@@ -226,7 +227,7 @@ const ProductPage: React.FC = () => {
         </div>
       </div>
     )}
-    </>
+    </div>
   );
 };
 
