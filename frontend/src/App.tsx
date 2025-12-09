@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { FavoritesProvider } from './contexts/FavoritesContext';
 import NavBar from './components/NavBar';
+import Footer from './components/Footer';
 import Home from './pages/Home';
 import AllListings from './pages/AllListings';
 // Product page replaces the older Detail view — kept Detail.tsx for quick reference
@@ -92,6 +93,7 @@ const App: React.FC = () => {
           <main className={`container ${isHome ? 'home-full' : ''}`}>
             <AppRoutes />
           </main>
+          <Footer />
         </div>
       </FavoritesProvider>
     </AuthProvider>

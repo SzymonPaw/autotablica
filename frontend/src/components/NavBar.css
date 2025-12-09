@@ -1,19 +1,29 @@
+/* Fixed navbar wrapper */
 .navbar {
   background-color: #ffffff;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  /* define a stable nav height so content can be offset correctly */
   --nav-height: 64px;
   --nav-button-height: 42px;
   height: var(--nav-height);
   padding: 0 1rem;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
+}
+
+/* Inner container with fixed width */
+.navbar-inner {
+  width: 100%;
+  max-width: 1320px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
 }
 
 .navbar-brand h1 {
@@ -32,18 +42,17 @@
 
 .navbar-brand a:hover {
   text-decoration: none;
-  color: inherit; /* brak niebieskiego na hover */
+  color: inherit;
 }
 
-/* Subtelna animowana kreska pod logo przy hover */
 .navbar-brand a::after {
   content: "";
   position: absolute;
   left: 0;
   bottom: -2px;
-  height: 2px;
   width: 0;
-  background: currentColor; /* użyj koloru tekstu, żadnych niebieskich akcentów */
+  height: 2px;
+  background: currentColor;
   transition: width 0.2s ease;
   border-radius: 2px;
 }
@@ -52,16 +61,16 @@
   width: 100%;
 }
 
-/* Widoczny focus dla dostępności */
 .navbar-brand a:focus-visible {
-  outline: 2px solid #2c3e50; /* neutralny kolor focusa */
+  outline: 2px solid #2c3e50;
   outline-offset: 2px;
   border-radius: 4px;
 }
 
 .navbar-menu {
   display: flex;
-  gap: 1rem;
+  justify-content: flex-end;
+  flex: 1;
 }
 
 .nav-buttons {

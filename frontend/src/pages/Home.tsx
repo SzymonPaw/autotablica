@@ -117,55 +117,57 @@ const Home: React.FC = () => {
     <div className="App home-page">
       <main className="main-content">
         <section className="listings promoted full-width">
-          <div className="listings-header">
-            <h2>Najnowsze ogłoszenia</h2>
-          </div>
-
-          <div className="basic-filters">
-            <label>
-              Marka
-              <select name="marka" value={markaId} onChange={(e) => setMarkaId(e.target.value)}>
-                <option value="">Wszystkie</option>
-                {brands.map(b => (
-                  <option key={b.id} value={b.id}>{b.nazwa}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Model
-              <select name="model" value={modelId} onChange={(e) => setModelId(e.target.value)} disabled={!markaId}>
-                <option value="">Wszystkie</option>
-                {models.map(m => (
-                  <option key={m.id} value={m.id}>{m.nazwa}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Cena od
-              <input type="number" min="0" step="1000" value={cenaMin} onChange={(e) => setCenaMin(e.target.value)} />
-            </label>
-            <label>
-              Cena do
-              <input type="number" min="0" step="1000" value={cenaMax} onChange={(e) => setCenaMax(e.target.value)} />
-            </label>
-            <label>
-              Rok od
-              <input type="number" min="1900" max={new Date().getFullYear()} value={rokMin} onChange={(e) => setRokMin(e.target.value)} />
-            </label>
-            <label>
-              Rok do
-              <input type="number" min="1900" max={new Date().getFullYear()} value={rokMax} onChange={(e) => setRokMax(e.target.value)} />
-            </label>
-            <div className="actions">
-              <button className="btn-primary" type="button" onClick={applyBasicFilters}>Filtruj</button>
-              <Link to="/ogloszenia" className="btn-secondary">Pokaż wszystkie filtry</Link>
+          <div className="promoted-inner">
+            <div className="listings-header">
+              <h2>Najnowsze ogłoszenia</h2>
             </div>
-          </div>
 
-          <Listing items={promoted} loading={loading} error={error} />
+            <div className="basic-filters">
+              <label>
+                Marka
+                <select name="marka" value={markaId} onChange={(e) => setMarkaId(e.target.value)}>
+                  <option value="">Wszystkie</option>
+                  {brands.map(b => (
+                    <option key={b.id} value={b.id}>{b.nazwa}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Model
+                <select name="model" value={modelId} onChange={(e) => setModelId(e.target.value)} disabled={!markaId}>
+                  <option value="">Wszystkie</option>
+                  {models.map(m => (
+                    <option key={m.id} value={m.id}>{m.nazwa}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Cena od
+                <input type="number" min="0" step="1000" value={cenaMin} onChange={(e) => setCenaMin(e.target.value)} />
+              </label>
+              <label>
+                Cena do
+                <input type="number" min="0" step="1000" value={cenaMax} onChange={(e) => setCenaMax(e.target.value)} />
+              </label>
+              <label>
+                Rok od
+                <input type="number" min="1900" max={new Date().getFullYear()} value={rokMin} onChange={(e) => setRokMin(e.target.value)} />
+              </label>
+              <label>
+                Rok do
+                <input type="number" min="1900" max={new Date().getFullYear()} value={rokMax} onChange={(e) => setRokMax(e.target.value)} />
+              </label>
+              <div className="actions">
+                <button className="btn-primary" type="button" onClick={applyBasicFilters}>Filtruj</button>
+                <Link to="/ogloszenia" className="btn-secondary">Pokaż wszystkie filtry</Link>
+              </div>
+            </div>
 
-          <div className="load-more">
-            <Link to="/ogloszenia" className="btn-secondary">Pokaż wszystkie ogłoszenia</Link>
+            <Listing items={promoted} loading={loading} error={error} />
+
+            <div className="load-more">
+              <Link to="/ogloszenia" className="btn-secondary">Pokaż wszystkie ogłoszenia</Link>
+            </div>
           </div>
         </section>
       </main>

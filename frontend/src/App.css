@@ -9,6 +9,18 @@ body {
 	color: #0f172a;
 }
 
+.AppRoot {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	background: #f8fafc;
+}
+
+.AppRoot > main.container {
+	flex: 1;
+	width: 100%;
+}
+
 /* Ensure main content is offset below the fixed navbar. Uses the nav variable
    set in NavBar.css (--nav-height). Falls back to 80px if not present. */
 .AppRoot .container {
@@ -246,7 +258,7 @@ button:hover {
 .ogloszenie-item {
 	border: 1px solid #e2e8f0;
 	border-radius: 10px;
-	padding: 16px;
+	padding: 7px;
 	background: #f1f5f9;
 }
 

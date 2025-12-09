@@ -4,7 +4,7 @@
 }
 
 .main-content {
-  margin-top: 60px; /* Space for fixed navbar */
+  margin-top: 0; /* kontener nadrzędny już uwzględnia wysokość nawigacji */
   padding: 1rem; /* bazowy padding */
   display: grid;
   /* Filtry 15% (min 220px), promowane reszta */
@@ -21,11 +21,21 @@
 /* Upewnij się, że sekcja promowanych wykorzystuje całą szerokość swojej kolumny */
 .listings.promoted {
   width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
 }
 
 /* Na stronie głównej sekcja promowanych ma zajmować pełną szerokość siatki */
 .listings.promoted.full-width {
   grid-column: 1 / -1;
+}
+
+.listings.promoted .promoted-inner {
+  width: 100%;
+  padding: 0 1rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Większy odstęp przed przyciskiem pod listą, by nie "wchodził" na kafelki */
@@ -184,18 +194,6 @@
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   min-height: calc(100vh - 100px); /* Wysokość na cały ekran minus navbar i margines */
-}
-
-/* Desktop: zawęź treści sekcji (nagłówek, filtry, lista i akcje) tak,
-   aby filtry zaczynały się w tej samej kolumnie co ogłoszenia */
-@media (min-width: 1024px) {
-  .listings.promoted .listings-header,
-  .listings.promoted .basic-filters,
-  .listings.promoted .load-more {
-    max-width: 75%;
-    margin-left: auto;
-    margin-right: auto;
-  }
 }
 
 .listings-header {

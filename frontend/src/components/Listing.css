@@ -43,6 +43,8 @@
   aspect-ratio: 16 / 9;
   background: #f2f4f7;
   overflow: hidden; /* ukryj nadmiar przy powiększaniu obrazka */
+  text-decoration: none;
+  color: inherit;
 }
 
 .thumb {
@@ -71,7 +73,8 @@
   padding: 1rem 1.25rem 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  flex: 1;
 }
 
 .card-title {
@@ -83,6 +86,7 @@
 .card-title a {
   color: #2c3e50;
   text-decoration: none;
+  text-align: center;
 }
 
 .card-title a {
@@ -120,38 +124,53 @@
   transform: scale(1.03);
 }
 
-.card-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-top: 0.25rem;
-}
-
 .card-price {
   font-weight: 700;
   color: #1e293b;
 }
 
-.card-year {
-  color: #475569;
+.card-specs {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem 0.9rem;
 }
 
-/* Najnowsze/promowane: 3 kolumny na desktopie (mniej tłoczno) */
+.card-specs .spec-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+      text-align: center;
+}
+
+.card-specs dt {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.card-specs dd {
+  margin: 0;
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.card-price-row {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 0.25rem;
+}
+
+/* Najnowsze/promowane: elastyczne kolumny, aby zachować 4 kafelki na szerokich ekranach */
 .listings.promoted .ogloszenia-list {
-  grid-template-columns: repeat(3, minmax(0, 1fr)); /* stałe 3 kolumny na szerokich ekranach */
-  column-gap: 2rem; /* odstęp w poziomie */
-  row-gap: 3rem; /* jeszcze większy odstęp w pionie */
-}
-
-/* Zachowaj szerokość kart jak przy 4 kolumnach: zawęź listę do ~75% szerokości i wyśrodkuj */
-@media (min-width: 1024px) {
-  .listings.promoted .ogloszenia-list {
-    max-width: 75%;
-    margin-left: auto;
-    margin-right: auto;
-    justify-content: center;
-  }
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  column-gap: 0.5rem;
+  row-gap: 3rem;
 }
 
 /* Desktop domyślnie: 5:4 — większe zdjęcie bez przesady na PC */
@@ -167,21 +186,26 @@
 }
 
 /* Zmniejszamy odrobinę treść pod zdjęciem, by więcej wysokości przypadło na obraz */
-.listings.promoted .card-body {
-  padding: 0.75rem 1rem 0.9rem;
-}
-
 .listings.promoted .card-title {
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   line-height: 1.2;
+  text-align: center;
 }
 
-.listings.promoted .card-row {
-  margin-top: 0.15rem;
+.listings.promoted .card-specs {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 0.75rem;
+  row-gap: 0.45rem;
+}
+
+@media (max-width: 640px) {
+  .listings.promoted .card-specs {
+    grid-template-columns: 1fr;
+  }
 }
 
 .listings.promoted .card-price {
-  font-size: 1rem;
+  font-size: 1.05rem;
 }
 
 /* Wszystkie ogłoszenia – wygląd jak wcześniejsze promowane (przed ostatnimi zmianami) */
@@ -209,17 +233,9 @@
   padding: 1rem; /* zmniejszony padding sekcji, więcej miejsca na karty */
 }
 
-.listings.promoted .card-title {
-  font-size: 1.2rem;
-}
-
-.listings.promoted .card-price {
-  font-size: 1.05rem;
-}
-
 /* Minimalnie mniejszy wewnętrzny padding, by wizualnie odchudzić kafelki */
 .listings.promoted .card-body {
-  padding: 0.9rem 1rem 1rem;
+  padding: 0.9rem 0.3rem 0.9rem;
 }
 
 /* przy 900px i 600px redukujemy do 2 i 1 kolumny poniżej */

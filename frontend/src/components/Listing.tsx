@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import './Listing.css';
 import { cleanTitle, titleFromBrandModel } from '../utils/title';
@@ -15,7 +15,12 @@ interface Ogloszenie {
   model_id?: number;
   marka?: { id: number; nazwa: string } | null;
   model?: { id: number; nazwa: string } | null;
-  rok_produkcji?: number | null;
+  rok_produkcji?: number | string | null;
+  przebieg?: number | string | null;
+  rodzaj_paliwa?: string | null;
+  moc_silnika?: number | string | null;
+  pojemnosc_silnika?: number | string | null;
+  skrzynia_biegow?: string | null;
   zdjecia?: Zdjecie[];
 }
 
@@ -25,31 +30,61 @@ type Props = {
   error?: string | null;
 };
 
+const numberFormatter = new Intl.NumberFormat('pl-PL');
+const MISSING_VALUE = 'Brak informacji';
+
+const hasMeaningfulValue = (value?: number | string | null) => {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'number') {
+    return value !== 0;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  const numeric = Number(trimmed);
+  if (!Number.isNaN(numeric) && numeric === 0) {
+    return false;
+  }
+  return true;
+};
+
+const parseNumeric = (value?: number | string | null) => {
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value) || value === 0) return null;
+    return value;
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed === 0) return null;
+    return parsed;
+  }
+  return null;
+};
+
+const formatMileage = (value?: number | string | null) => {
+  const numeric = parseNumeric(value);
+  if (numeric === null) return MISSING_VALUE;
+  return `${numberFormatter.format(Math.round(numeric))} km`;
+};
+
+const formatHorsepower = (value?: number | string | null) => {
+  const numeric = parseNumeric(value);
+  if (numeric === null) return MISSING_VALUE;
+  return `${Math.round(numeric)} KM`;
+};
+
+const formatCapacity = (value?: number | string | null) => {
+  const numeric = parseNumeric(value);
+  if (numeric === null) return MISSING_VALUE;
+  return `${numeric.toFixed(2)} l`;
+};
+
+const formatGeneric = (value?: number | string | null) => {
+  if (!hasMeaningfulValue(value)) return MISSING_VALUE;
+  if (typeof value === 'string') return value.trim();
+  return String(value);
+};
+
 const Listing: React.FC<Props> = ({ items, loading, error }) => {
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxImages, setLightboxImages] = useState<string[]>([]);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
-
-  const openLightbox = useCallback((images: string[], index: number) => {
-    setLightboxImages(images);
-    setLightboxIndex(index);
-    setLightboxOpen(true);
-  }, []);
-
-  const closeLightbox = useCallback(() => setLightboxOpen(false), []);
-  const showPrev = useCallback(() => setLightboxIndex(i => (i - 1 + lightboxImages.length) % lightboxImages.length), [lightboxImages.length]);
-  const showNext = useCallback(() => setLightboxIndex(i => (i + 1) % lightboxImages.length), [lightboxImages.length]);
-
-  useEffect(() => {
-    if (!lightboxOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeLightbox();
-      if (e.key === 'ArrowLeft') showPrev();
-      if (e.key === 'ArrowRight') showNext();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [lightboxOpen, closeLightbox, showPrev, showNext]);
 
   if (loading) return <p>Ładowanie ogłoszeń...</p>;
   if (error) return <p className="feedback error">{error}</p>;
@@ -60,47 +95,61 @@ const Listing: React.FC<Props> = ({ items, loading, error }) => {
     <ul className="ogloszenia-list">
       {items.map((item) => {
         const firstPhoto = Array.isArray(item.zdjecia) && item.zdjecia.length > 0 ? (item.zdjecia[0]?.url ?? null) : null;
-        const title = titleFromBrandModel(item.marka, item.model, cleanTitle(item.tytul));
+        const fallbackTitle = titleFromBrandModel(item.marka, item.model, cleanTitle(item.tytul));
+        const listingTitle = cleanTitle(item.tytul) || fallbackTitle;
         const price = typeof item.cena === 'string' ? Number(item.cena) : (item.cena as number | null);
-        const images = Array.isArray(item.zdjecia) ? item.zdjecia.map(z => z?.url).filter(Boolean) as string[] : [];
         return (
           <li key={item.id} className="ogloszenie-item">
             <FavoriteButton
               listingId={item.id}
               className="listing-favorite-button"
             />
-            <button type="button" className="thumb-wrapper" aria-label={title} onClick={() => images.length && openLightbox(images, 0)}>
+            <Link to={`/ogloszenie/${item.id}`} className="thumb-wrapper" aria-label={listingTitle}>
               {firstPhoto ? (
-                <img className="thumb" src={firstPhoto} alt={title} loading="lazy" decoding="async" />
+                <img className="thumb" src={firstPhoto} alt={listingTitle} loading="lazy" decoding="async" />
               ) : (
                 <div className="thumb placeholder">Brak zdjęcia</div>
               )}
-            </button>
+            </Link>
 
             <div className="card-body">
               <h3 className="card-title">
-                <Link to={`/ogloszenie/${item.id}`}>{title}</Link>
+                <Link to={`/ogloszenie/${item.id}`}>{listingTitle}</Link>
               </h3>
-              <div className="card-row">
+              <dl className="card-specs">
+                <div className="spec-item">
+                  <dt>Rok produkcji</dt>
+                  <dd>{formatGeneric(item.rok_produkcji)}</dd>
+                </div>
+                <div className="spec-item">
+                  <dt>Przebieg</dt>
+                  <dd>{formatMileage(item.przebieg)}</dd>
+                </div>
+                <div className="spec-item">
+                  <dt>Rodzaj paliwa</dt>
+                  <dd>{formatGeneric(item.rodzaj_paliwa)}</dd>
+                </div>
+                <div className="spec-item">
+                  <dt>Konie mechaniczne</dt>
+                  <dd>{formatHorsepower(item.moc_silnika)}</dd>
+                </div>
+                <div className="spec-item">
+                  <dt>Pojemność silnika</dt>
+                  <dd>{formatCapacity(item.pojemnosc_silnika)}</dd>
+                </div>
+                <div className="spec-item">
+                  <dt>Skrzynia biegów</dt>
+                  <dd>{formatGeneric(item.skrzynia_biegow)}</dd>
+                </div>
+              </dl>
+              <div className="card-price-row">
                 <span className="card-price">{formatPrice(price ?? null)}</span>
-                <span className="card-year">{item.rok_produkcji ?? '—'}</span>
               </div>
             </div>
           </li>
         );
       })}
     </ul>
-    {lightboxOpen && lightboxImages.length > 0 && (
-      <div className="lightbox-overlay" onClick={closeLightbox}>
-        <div className="lightbox-inner" onClick={e => e.stopPropagation()}>
-          <button type="button" className="lightbox-close" onClick={closeLightbox} aria-label="Zamknij">×</button>
-          {lightboxImages.length > 1 && (<button type="button" className="lightbox-prev" onClick={showPrev} aria-label="Poprzednie">‹</button>)}
-          {lightboxImages.length > 1 && (<button type="button" className="lightbox-next" onClick={showNext} aria-label="Następne">›</button>)}
-          <img src={lightboxImages[lightboxIndex]} alt={`Podgląd ${lightboxIndex + 1}`} className="lightbox-image" />
-          {lightboxImages.length > 1 && (<div className="lightbox-counter">{lightboxIndex + 1} / {lightboxImages.length}</div>)}
-        </div>
-      </div>
-    )}
     </>
   );
 };
