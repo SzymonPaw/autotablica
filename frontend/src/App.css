@@ -404,6 +404,59 @@ button:hover {
 	margin-top: 12px;
 }
 
+/* Sekcja wyposażenia ma większe kafelki */
+.equipment-accordion-list {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.equipment-accordion-item {
+	border: 1px solid #e2e8f0;
+	border-radius: 10px;
+	background: #fff;
+	overflow: hidden;
+}
+
+.equipment-accordion-header {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 14px;
+	background: #f8fafc;
+	border: none;
+	cursor: pointer;
+	font-weight: 600;
+	color: #1e293b;
+}
+
+.equipment-accordion-header:hover {
+	background: #f1f5f9;
+}
+
+.equipment-accordion-content {
+	list-style: none;
+	margin: 0;
+	padding: 10px 14px 14px 18px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.equipment-accordion-content li {
+	color: #334155;
+}
+
+.chevron {
+	transition: transform 0.18s ease;
+	font-size: 14px;
+}
+
+.chevron.open {
+	transform: rotate(180deg);
+}
+
 .detail-sections {
 	margin-top: 24px;
 	display: grid;
@@ -1137,4 +1190,5 @@ button:hover {
 	color: #fff;
 	font-size: 0.9rem;
 }
+
 

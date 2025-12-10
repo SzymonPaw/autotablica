@@ -41,6 +41,8 @@ class StoreOgloszenieRequest extends FormRequest
             'skrzynia_biegow' => ['required', 'string', 'max:50'],
             'pojemnosc_silnika' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', 'string', 'max:50'],
+            'wyposazenie' => ['nullable', 'array'],
+            'wyposazenie.*' => ['boolean'],
         ];
     }
 }

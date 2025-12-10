@@ -210,6 +210,15 @@ export async function createListing(payload: CreateListingPayload): Promise<any>
   return response.data;
 }
 
+export async function updateListing(id: number | string, payload: any): Promise<any> {
+  if (id == null) throw new Error('Missing id');
+  const response = await apiRequest<any>(`/ogloszenia/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+  return response.data;
+}
+
 // Szkice ogłoszeń
 export async function saveDraftListing(payload: any): Promise<any> {
   const response = await apiRequest<any>(`/szkice-ogloszen`, {

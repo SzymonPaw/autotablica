@@ -199,6 +199,9 @@ class OgloszenieController extends Controller
 
     public function update(UpdateOgloszenieRequest $request, Ogloszenie $ogloszenie): OgloszenieResource
     {
+        // Autoryzacja jest już sprawdzana w UpdateOgloszenieRequest::authorize()
+        // $this->authorize('update', $ogloszenie);
+
         $validated = $request->validated();
 
         $ogloszenie->fill($validated);

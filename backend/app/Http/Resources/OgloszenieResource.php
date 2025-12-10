@@ -40,6 +40,7 @@ class OgloszenieResource extends JsonResource
             'skrzynia_biegow' => $this->skrzynia_biegow,
             'pojemnosc_silnika' => $this->pojemnosc_silnika !== null ? (float) $this->pojemnosc_silnika : null,
             'status' => $this->status,
+            'wyposazenie' => is_array($this->wyposazenie) ? $this->wyposazenie : (object)[],
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
             'marka' => $this->whenLoaded('marka', function () {

@@ -646,6 +646,162 @@ const ProductPage: React.FC = () => {
     return photos.length ? photos[0]?.url ?? null : null;
   };
 
+  // Mapowanie kluczy wyposażenia na polskie nazwy
+  const equipmentLabels: { [key: string]: string } = {
+    // Bezpieczeństwo
+    'abs': 'ABS',
+    'esp': 'ESP (Kontrola Trakcji)',
+    'poduszki_powietrzne': 'Poduszki Powietrzne',
+    'isofix': 'ISOFIX',
+    'system_ostrzegania_pasa': 'Asystent Pasa Ruchu',
+    'asystent_martwego_pola': 'Asystent Martwego Pola',
+    'kamera_cofania': 'Kamera Cofania',
+    'czujniki_parkowania': 'Czujniki Parkowania',
+    
+    // Komfort
+    'klimatyzacja': 'Klimatyzacja',
+    'klimatyzacja_automatyczna': 'Klimatyzacja Automatyczna',
+    'tempomat': 'Tempomat',
+    'tempomat_aktywny': 'Tempomat aktywny',
+    'tempomat_adaptacyjny': 'Tempomat Adaptacyjny',
+    'elektryczne_szyby': 'Elektryczne Szyby',
+    'elektryczne_lusterka': 'Elektryczne Lusterka',
+    'podgrzewane_fotele': 'Podgrzewane Fotele',
+    'wentylowane_fotele': 'Wentylowane Fotele',
+    'fotele_ze_skory': 'Fotele Ze Skóry',
+    'fotele_sportowe': 'Fotele Sportowe',
+    'panoramiczny_dach': 'Panoramiczny Dach',
+    'szyberdach': 'Szyberdach',
+    
+    // Multimedia
+    'radio': 'Radio',
+    'bluetooth': 'Bluetooth',
+    'android_auto': 'Android Auto',
+    'apple_carplay': 'Apple CarPlay',
+    'nawigacja': 'Nawigacja GPS',
+    'glosniki_premium': 'System Audio Premium',
+    'ekran_dotykowy': 'Ekran Dotykowy',
+    'ladowanie_indukcyjne': 'Ładowanie Indukcyjne',
+    
+    // Oświetlenie
+    'led': 'Reflektory LED',
+    'xenon': 'Reflektory Xenon',
+    'swiatla_przeciwmgielne': 'Światła Przeciwmgielne',
+    'automatyczne_swiatla': 'Automatyczne Światła',
+    'swiatla_do_jazdy_dziennej': 'Światła Do Jazdy Dziennej',
+    
+    // Inne
+    'alufelgi': 'Alufelgi',
+    'hak': 'Hak Holowniczy',
+    'relingi_dachowe': 'Relingi Dachowe',
+    'alarm': 'Alarm',
+    'immobiliser': 'Immobiliser',
+    'komputer_pokladowy': 'Komputer Pokładowy',
+    'head_up_display': 'Head-Up Display',
+    'kluczyk_bezdotykowy': 'Kluczyk Bezdotykowy',
+    'start_stop': 'System Start-Stop',
+  };
+
+  const formatEquipmentLabel = (key: string) => {
+    if (equipmentLabels[key]) return equipmentLabels[key];
+    // Fallback: zamień podkreślenia na spacje i kapitalizuj pierwszą literę każdego słowa
+    return key
+      .split('_')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  };
+
+  const equipmentCategories = [
+    {
+      key: 'bezpieczenstwo',
+      label: 'Bezpieczeństwo',
+      items: [
+        'abs',
+        'esp',
+        'poduszki_powietrzne',
+        'isofix',
+        'system_ostrzegania_pasa',
+        'asystent_martwego_pola',
+        'kamera_cofania',
+        'czujniki_parkowania',
+      ],
+    },
+    {
+      key: 'komfort',
+      label: 'Komfort',
+      items: [
+        'klimatyzacja',
+        'klimatyzacja_automatyczna',
+        'tempomat',
+        'tempomat_aktywny',
+        'tempomat_adaptacyjny',
+        'elektryczne_szyby',
+        'elektryczne_lusterka',
+        'podgrzewane_fotele',
+        'wentylowane_fotele',
+        'fotele_ze_skory',
+        'fotele_sportowe',
+        'panoramiczny_dach',
+        'szyberdach',
+      ],
+    },
+    {
+      key: 'multimedia',
+      label: 'Multimedia',
+      items: [
+        'radio',
+        'bluetooth',
+        'android_auto',
+        'apple_carplay',
+        'nawigacja',
+        'glosniki_premium',
+        'ekran_dotykowy',
+        'ladowanie_indukcyjne',
+      ],
+    },
+    {
+      key: 'oswietlenie',
+      label: 'Oświetlenie',
+      items: [
+        'led',
+        'xenon',
+        'swiatla_przeciwmgielne',
+        'automatyczne_swiatla',
+        'swiatla_do_jazdy_dziennej',
+      ],
+    },
+    {
+      key: 'inne',
+      label: 'Inne',
+      items: [
+        'alufelgi',
+        'hak',
+        'relingi_dachowe',
+        'alarm',
+        'immobiliser',
+        'komputer_pokladowy',
+        'head_up_display',
+        'kluczyk_bezdotykowy',
+        'start_stop',
+      ],
+    },
+  ];
+
+  const categorizedKeys = new Set(equipmentCategories.flatMap((c) => c.items));
+
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    equipmentCategories.forEach((cat) => {
+      initial[cat.key] = false; // domyślnie zwinięte
+    });
+    initial['others'] = false;
+    return initial;
+  });
+
+  const toggleCategory = (key: string) => {
+    setExpandedCategories((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
   if (loading) return <p>Ładowanie ogłoszenia...</p>;
   if (error) return <p className="feedback error">{error}</p>;
   if (!item) return <p className="empty">Brak ogłoszenia.</p>;
@@ -800,6 +956,56 @@ const ProductPage: React.FC = () => {
             <div><dt>Bezwypadkowy</dt><dd>{formatBoolean(item.bezwypadkowy as boolean)}</dd></div>
           </dl>
         </section>
+
+        {/* Wyposażenie */}
+        {item.wyposazenie && typeof item.wyposazenie === 'object' && Object.keys(item.wyposazenie).length > 0 && Object.values(item.wyposazenie).some((value) => value === true) && (
+          <section className="spec equipment-section">
+            <h3>Wyposażenie</h3>
+            <div className="equipment-accordion-list">
+              {equipmentCategories.map((category) => {
+                const activeItems = category.items.filter((key) => item.wyposazenie?.[key]);
+                if (!activeItems.length) return null;
+                const isOpen = expandedCategories[category.key];
+                return (
+                  <div className="equipment-accordion-item" key={category.key}>
+                    <button className="equipment-accordion-header" type="button" onClick={() => toggleCategory(category.key)}>
+                      <span>{category.label}</span>
+                      <span className={`chevron ${isOpen ? 'open' : ''}`}>⌄</span>
+                    </button>
+                    {isOpen && (
+                      <ul className="equipment-accordion-content">
+                        {activeItems.map((key) => (
+                          <li key={key}>{formatEquipmentLabel(key)}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Pozostałe (gdyby pojawiły się nowe klucze nieujęte w kategoriach) */}
+              {Object.entries(item.wyposazenie)
+                .filter(([key, value]) => value === true && !categorizedKeys.has(key))
+                .length > 0 && (
+                <div className="equipment-accordion-item" key="others">
+                  <button className="equipment-accordion-header" type="button" onClick={() => toggleCategory('others')}>
+                    <span>Pozostałe</span>
+                    <span className={`chevron ${expandedCategories['others'] ? 'open' : ''}`}>⌄</span>
+                  </button>
+                  {expandedCategories['others'] && (
+                    <ul className="equipment-accordion-content">
+                      {Object.entries(item.wyposazenie)
+                        .filter(([key, value]) => value === true && !categorizedKeys.has(key))
+                        .map(([key]) => (
+                          <li key={key}>{formatEquipmentLabel(key)}</li>
+                        ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         <section className="description">
           <h3>Opis</h3>

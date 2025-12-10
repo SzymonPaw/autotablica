@@ -40,6 +40,7 @@ class Ogloszenie extends Model
         'skrzynia_biegow',
         'pojemnosc_silnika',
         'status',
+        'wyposazenie',
     ];
 
     protected $casts = [
@@ -57,6 +58,7 @@ class Ogloszenie extends Model
         'serwisowany_w_aso' => 'boolean',
         'bezwypadkowy' => 'boolean',
         'pojemnosc_silnika' => 'float',
+        'wyposazenie' => 'array',
     ];
 
     public function uzytkownik()

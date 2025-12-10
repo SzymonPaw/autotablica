@@ -21,6 +21,7 @@ interface Ogloszenie {
   moc_silnika?: number | string | null;
   pojemnosc_silnika?: number | string | null;
   skrzynia_biegow?: string | null;
+  wyposazenie?: { [key: string]: boolean } | null;
   zdjecia?: Zdjecie[];
 }
 

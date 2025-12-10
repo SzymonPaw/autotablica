@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createListing, saveDraftListing, uploadListingPhotos, fetchBrands, fetchModels, MarkaDto, ModelDto } from '../../api/client';
+import { createListing, updateListing, saveDraftListing, uploadListingPhotos, fetchBrands, fetchModels, fetchListingById, MarkaDto, ModelDto } from '../../api/client';
 import './AddListingForm.css';
 
 interface AddListingFormProps {
   onSuccess: (createdId: number) => void;
+  editingId?: number | string;
 }
 
 interface ListingFormData {
@@ -33,10 +34,15 @@ interface ListingFormData {
   serwisowany_w_aso: boolean;
   bezwypadkowy: boolean;
   zdjecia: File[];
+  wyposazenie: {
+    [key: string]: boolean;
+  };
 }
 
-const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
+const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess, editingId }) => {
   const navigate = useNavigate();
+  const isEditing = !!editingId;
+  const [isLoadingExisting, setIsLoadingExisting] = useState(isEditing);
   const [formData, setFormData] = useState<ListingFormData>({
     opis: '',
     cena: '',
@@ -62,7 +68,8 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
     pierwszy_wlasciciel: false,
     serwisowany_w_aso: false,
     bezwypadkowy: false,
-    zdjecia: []
+    zdjecia: [],
+    wyposazenie: {}
   });
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,6 +81,20 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
   const [modelsError, setModelsError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isAdditionalInfoExpanded, setIsAdditionalInfoExpanded] = useState(false);
+  const [expandedEquipmentCategories, setExpandedEquipmentCategories] = useState<{[key: string]: boolean}>({
+    bezpieczenstwo: false,
+    komfort: false,
+    multimedia: false,
+    oswietlenie: false,
+    inne: false
+  });
+
+  const toggleEquipmentCategory = (category: string) => {
+    setExpandedEquipmentCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
 
   // Load brands on mount
   useEffect(() => {
@@ -83,6 +104,61 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
       .catch((e) => { if (mounted) setBrandsError(e?.message || 'Nie udało się pobrać marek.'); });
     return () => { mounted = false; };
   }, []);
+
+  // Load existing listing data when editing
+  useEffect(() => {
+    if (!isEditing) {
+      setIsLoadingExisting(false);
+      return;
+    }
+
+    let mounted = true;
+    const loadExistingListing = async () => {
+      try {
+        const data = await fetchListingById(editingId);
+        if (!mounted) return;
+
+        setFormData({
+          opis: data.opis || '',
+          cena: String(data.cena || ''),
+          marka_id: String(data.marka_id || ''),
+          model_id: String(data.model_id || ''),
+          vin: data.vin || '',
+          numer_rejestracyjny: data.numer_rejestracyjny || '',
+          rok_produkcji: data.rok_produkcji ? String(data.rok_produkcji) : '',
+          data_pierwszej_rej: data.data_pierwszej_rej || '',
+          przebieg: data.przebieg ? String(data.przebieg) : '',
+          moc_silnika: data.moc_silnika ? String(data.moc_silnika) : '',
+          rodzaj_paliwa: data.rodzaj_paliwa || '',
+          skrzynia_biegow: data.skrzynia_biegow || '',
+          pojemnosc_silnika: data.pojemnosc_silnika ? String(data.pojemnosc_silnika) : '',
+          naped: data.naped || '',
+          liczba_drzwi: data.liczba_drzwi ? String(data.liczba_drzwi) : '',
+          liczba_miejsc: data.liczba_miejsc ? String(data.liczba_miejsc) : '',
+          kolor: data.kolor || '',
+          metalik: data.metalik || false,
+          stan: data.stan || '',
+          wypadkowy: data.wypadkowy || false,
+          zarejestrowany_w_polsce: data.zarejestrowany_w_polsce || false,
+          pierwszy_wlasciciel: data.pierwszy_wlasciciel || false,
+          serwisowany_w_aso: data.serwisowany_w_aso || false,
+          bezwypadkowy: data.bezwypadkowy || false,
+          zdjecia: [],
+          wyposazenie: (data.wyposazenie && typeof data.wyposazenie === 'object') ? data.wyposazenie : {}
+        });
+
+        setIsLoadingExisting(false);
+      } catch (err) {
+        if (mounted) {
+          setError(err instanceof Error ? err.message : 'Nie udało się załadować danych ogłoszenia');
+          setIsLoadingExisting(false);
+        }
+      }
+    };
+
+    loadExistingListing();
+    return () => { mounted = false; };
+  }, [isEditing, editingId]);
 
   // Load models when marka_id changes
   useEffect(() => {
@@ -155,10 +231,23 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
     
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
-      setFormData(prev => ({
-        ...prev,
-        [name]: checked
-      }));
+      
+      // Sprawdź czy to checkbox wyposażenia
+      if (name.startsWith('wyposazenie_')) {
+        const equipmentKey = name.replace('wyposazenie_', '');
+        setFormData(prev => ({
+          ...prev,
+          wyposazenie: {
+            ...prev.wyposazenie,
+            [equipmentKey]: checked
+          }
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [name]: checked
+        }));
+      }
     } else if (type === 'file') {
       const files = (e.target as HTMLInputElement).files;
       if (files) {
@@ -185,6 +274,11 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
     // zamieniamy na litry (2.5), bo backend trzyma decimal(5,2) w litrach.
     const rawCap = formData.pojemnosc_silnika ? Number(formData.pojemnosc_silnika) : 0;
     const pojemnoscLitry = rawCap > 50 ? Math.round((rawCap / 1000) * 100) / 100 : rawCap; // zaokrąglij do 2 miejsc
+
+    // Filtruj wyposażenie - wysyłaj tylko to co jest zaznaczone (true)
+    const wyposazenie = Object.entries(formData.wyposazenie)
+      .filter(([_, value]) => value === true)
+      .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
 
     return {
       tytul: computedTitle || 'Ogłoszenie',
@@ -213,6 +307,7 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
       skrzynia_biegow: formData.skrzynia_biegow,
       pojemnosc_silnika: pojemnoscLitry || 0,
       status: 'aktywny',
+      wyposazenie: Object.keys(wyposazenie).length > 0 ? wyposazenie : null,
     };
   };
 
@@ -220,6 +315,11 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
     // Dla szkiców wszystkie pola są opcjonalne
     const rawCap = formData.pojemnosc_silnika ? Number(formData.pojemnosc_silnika) : null;
     const pojemnoscLitry = rawCap && rawCap > 50 ? Math.round((rawCap / 1000) * 100) / 100 : rawCap;
+
+    // Filtruj wyposażenie - wysyłaj tylko to co jest zaznaczone (true)
+    const wyposazenie = Object.entries(formData.wyposazenie)
+      .filter(([_, value]) => value === true)
+      .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
 
     return {
       tytul: computedTitle || null,
@@ -247,6 +347,7 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
       rodzaj_paliwa: formData.rodzaj_paliwa || null,
       skrzynia_biegow: formData.skrzynia_biegow || null,
       pojemnosc_silnika: pojemnoscLitry,
+      wyposazenie: Object.keys(wyposazenie).length > 0 ? wyposazenie : null,
     };
   };
 
@@ -293,16 +394,24 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
 
     try {
       const payload = buildPayload();
+      let resultId: number;
 
-      const created = await createListing(payload);
-      const newId = Number(created?.id ?? 0);
-      if (newId > 0) setCreatedId(newId);
+      if (isEditing) {
+        // Update existing listing
+        const updated = await updateListing(editingId, payload);
+        resultId = Number(updated?.id ?? editingId ?? 0);
+      } else {
+        // Create new listing
+        const created = await createListing(payload);
+        resultId = Number(created?.id ?? 0);
+        if (resultId > 0) setCreatedId(resultId);
+      }
 
-      if (newId > 0 && formData.zdjecia.length > 0) {
+      if (resultId > 0 && formData.zdjecia.length > 0) {
         try {
-          await uploadListingPhotos(newId, formData.zdjecia);
+          await uploadListingPhotos(resultId, formData.zdjecia);
           setPhotosError(null);
-          onSuccess(newId);
+          onSuccess(resultId);
           return;
         } catch (uploadErr) {
           const msg = uploadErr instanceof Error ? uploadErr.message : 'Nie udało się wysłać zdjęć.';
@@ -313,9 +422,10 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
         }
       }
       // Jeśli nie ma zdjęć do wysłania — od razu przekieruj
-      onSuccess(newId);
+      onSuccess(resultId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Wystąpił błąd podczas dodawania ogłoszenia.');
+      const msg = isEditing ? 'Nie udało się zaktualizować ogłoszenia.' : 'Nie udało się dodać ogłoszenia.';
+      setError(err instanceof Error ? err.message : msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -340,7 +450,9 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
   return (
     <div className="add-listing-page">
       <form onSubmit={handleSubmit} className="add-listing-form">
-      <h2>Dodaj nowe ogłoszenie</h2>
+      <h2>{isEditing ? 'Edytuj ogłoszenie' : 'Dodaj nowe ogłoszenie'}</h2>
+
+      {isLoadingExisting && <div style={{ textAlign: 'center', padding: '20px' }}>Ładowanie danych ogłoszenia...</div>}
 
       {error && <div className="error-message">{error}</div>}
 
@@ -683,6 +795,519 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
         </div>
       </section>
 
+      {/* Sekcja wyposażenia */}
+      <section className="form-section">
+        <h3>Wyposażenie pojazdu</h3>
+        
+        {/* Bezpieczeństwo */}
+        <div className="equipment-category">
+          <button
+            type="button"
+            className="equipment-toggle-button"
+            onClick={() => toggleEquipmentCategory('bezpieczenstwo')}
+          >
+            <span>Bezpieczeństwo</span>
+            <svg
+              className={`toggle-icon ${expandedEquipmentCategories.bezpieczenstwo ? 'expanded' : ''}`}
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          {expandedEquipmentCategories.bezpieczenstwo && (
+            <div className="checkboxes-group">
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_abs"
+                checked={formData.wyposazenie['abs'] || false}
+                onChange={handleChange}
+              />
+              ABS
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_esp"
+                checked={formData.wyposazenie['esp'] || false}
+                onChange={handleChange}
+              />
+              ESP (Kontrola Trakcji)
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_poduszki_powietrzne"
+                checked={formData.wyposazenie['poduszki_powietrzne'] || false}
+                onChange={handleChange}
+              />
+              Poduszki Powietrzne
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_isofix"
+                checked={formData.wyposazenie['isofix'] || false}
+                onChange={handleChange}
+              />
+              ISOFIX
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_system_ostrzegania_pasa"
+                checked={formData.wyposazenie['system_ostrzegania_pasa'] || false}
+                onChange={handleChange}
+              />
+              Asystent Pasa Ruchu
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_asystent_martwego_pola"
+                checked={formData.wyposazenie['asystent_martwego_pola'] || false}
+                onChange={handleChange}
+              />
+              Asystent Martwego Pola
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_kamera_cofania"
+                checked={formData.wyposazenie['kamera_cofania'] || false}
+                onChange={handleChange}
+              />
+              Kamera Cofania
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_czujniki_parkowania"
+                checked={formData.wyposazenie['czujniki_parkowania'] || false}
+                onChange={handleChange}
+              />
+              Czujniki Parkowania
+            </label>
+          </div>
+          )}
+        </div>
+
+        {/* Komfort */}
+        <div className="equipment-category">
+          <button
+            type="button"
+            className="equipment-toggle-button"
+            onClick={() => toggleEquipmentCategory('komfort')}
+          >
+            <span>Komfort</span>
+            <svg
+              className={`toggle-icon ${expandedEquipmentCategories.komfort ? 'expanded' : ''}`}
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          {expandedEquipmentCategories.komfort && (
+            <div className="checkboxes-group">
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_klimatyzacja"
+                checked={formData.wyposazenie['klimatyzacja'] || false}
+                onChange={handleChange}
+              />
+              Klimatyzacja
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_klimatyzacja_automatyczna"
+                checked={formData.wyposazenie['klimatyzacja_automatyczna'] || false}
+                onChange={handleChange}
+              />
+              Klimatyzacja Automatyczna
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_tempomat"
+                checked={formData.wyposazenie['tempomat'] || false}
+                onChange={handleChange}
+              />
+              Tempomat
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_tempomat_aktywny"
+                checked={formData.wyposazenie['tempomat_aktywny'] || false}
+                onChange={handleChange}
+              />
+              Tempomat aktywny
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_elektryczne_szyby"
+                checked={formData.wyposazenie['elektryczne_szyby'] || false}
+                onChange={handleChange}
+              />
+              Elektryczne Szyby
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_elektryczne_lusterka"
+                checked={formData.wyposazenie['elektryczne_lusterka'] || false}
+                onChange={handleChange}
+              />
+              Elektryczne Lusterka
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_podgrzewane_fotele"
+                checked={formData.wyposazenie['podgrzewane_fotele'] || false}
+                onChange={handleChange}
+              />
+              Podgrzewane Fotele
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_wentylowane_fotele"
+                checked={formData.wyposazenie['wentylowane_fotele'] || false}
+                onChange={handleChange}
+              />
+              Wentylowane Fotele
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_fotele_ze_skory"
+                checked={formData.wyposazenie['fotele_ze_skory'] || false}
+                onChange={handleChange}
+              />
+              Fotele Ze Skóry
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_fotele_sportowe"
+                checked={formData.wyposazenie['fotele_sportowe'] || false}
+                onChange={handleChange}
+              />
+              Fotele Sportowe
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_panoramiczny_dach"
+                checked={formData.wyposazenie['panoramiczny_dach'] || false}
+                onChange={handleChange}
+              />
+              Panoramiczny Dach
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_szyberdach"
+                checked={formData.wyposazenie['szyberdach'] || false}
+                onChange={handleChange}
+              />
+              Szyberdach
+            </label>
+          </div>
+          )}
+        </div>
+
+        {/* Multimedia */}
+        <div className="equipment-category">
+          <button
+            type="button"
+            className="equipment-toggle-button"
+            onClick={() => toggleEquipmentCategory('multimedia')}
+          >
+            <span>Multimedia</span>
+            <svg
+              className={`toggle-icon ${expandedEquipmentCategories.multimedia ? 'expanded' : ''}`}
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          {expandedEquipmentCategories.multimedia && (
+            <div className="checkboxes-group">
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_radio"
+                checked={formData.wyposazenie['radio'] || false}
+                onChange={handleChange}
+              />
+              Radio
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_bluetooth"
+                checked={formData.wyposazenie['bluetooth'] || false}
+                onChange={handleChange}
+              />
+              Bluetooth
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_android_auto"
+                checked={formData.wyposazenie['android_auto'] || false}
+                onChange={handleChange}
+              />
+              Android Auto
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_apple_carplay"
+                checked={formData.wyposazenie['apple_carplay'] || false}
+                onChange={handleChange}
+              />
+              Apple CarPlay
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_nawigacja"
+                checked={formData.wyposazenie['nawigacja'] || false}
+                onChange={handleChange}
+              />
+              Nawigacja GPS
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_glosniki_premium"
+                checked={formData.wyposazenie['glosniki_premium'] || false}
+                onChange={handleChange}
+              />
+              System Audio Premium
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_ekran_dotykowy"
+                checked={formData.wyposazenie['ekran_dotykowy'] || false}
+                onChange={handleChange}
+              />
+              Ekran Dotykowy
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_ladowanie_indukcyjne"
+                checked={formData.wyposazenie['ladowanie_indukcyjne'] || false}
+                onChange={handleChange}
+              />
+              Ładowanie Indukcyjne
+            </label>
+          </div>
+          )}
+        </div>
+
+        {/* Oświetlenie */}
+        <div className="equipment-category">
+          <button
+            type="button"
+            className="equipment-toggle-button"
+            onClick={() => toggleEquipmentCategory('oswietlenie')}
+          >
+            <span>Oświetlenie</span>
+            <svg
+              className={`toggle-icon ${expandedEquipmentCategories.oswietlenie ? 'expanded' : ''}`}
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          {expandedEquipmentCategories.oswietlenie && (
+            <div className="checkboxes-group">
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_led"
+                checked={formData.wyposazenie['led'] || false}
+                onChange={handleChange}
+              />
+              Reflektory LED
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_xenon"
+                checked={formData.wyposazenie['xenon'] || false}
+                onChange={handleChange}
+              />
+              Reflektory Xenon
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_swiatla_przeciwmgielne"
+                checked={formData.wyposazenie['swiatla_przeciwmgielne'] || false}
+                onChange={handleChange}
+              />
+              Światła Przeciwmgielne
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_automatyczne_swiatla"
+                checked={formData.wyposazenie['automatyczne_swiatla'] || false}
+                onChange={handleChange}
+              />
+              Automatyczne Światła
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_swiatla_do_jazdy_dziennej"
+                checked={formData.wyposazenie['swiatla_do_jazdy_dziennej'] || false}
+                onChange={handleChange}
+              />
+              Światła Do Jazdy Dziennej
+            </label>
+          </div>
+          )}
+        </div>
+
+        {/* Inne */}
+        <div className="equipment-category">
+          <button
+            type="button"
+            className="equipment-toggle-button"
+            onClick={() => toggleEquipmentCategory('inne')}
+          >
+            <span>Inne</span>
+            <svg
+              className={`toggle-icon ${expandedEquipmentCategories.inne ? 'expanded' : ''}`}
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          {expandedEquipmentCategories.inne && (
+            <div className="checkboxes-group">
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_alufelgi"
+                checked={formData.wyposazenie['alufelgi'] || false}
+                onChange={handleChange}
+              />
+              Alufelgi
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_hak"
+                checked={formData.wyposazenie['hak'] || false}
+                onChange={handleChange}
+              />
+              Hak Holowniczy
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_relingi_dachowe"
+                checked={formData.wyposazenie['relingi_dachowe'] || false}
+                onChange={handleChange}
+              />
+              Relingi Dachowe
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_alarm"
+                checked={formData.wyposazenie['alarm'] || false}
+                onChange={handleChange}
+              />
+              Alarm
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_immobiliser"
+                checked={formData.wyposazenie['immobiliser'] || false}
+                onChange={handleChange}
+              />
+              Immobiliser
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_komputer_pokladowy"
+                checked={formData.wyposazenie['komputer_pokladowy'] || false}
+                onChange={handleChange}
+              />
+              Komputer Pokładowy
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_head_up_display"
+                checked={formData.wyposazenie['head_up_display'] || false}
+                onChange={handleChange}
+              />
+              Head-Up Display
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_kluczyk_bezdotykowy"
+                checked={formData.wyposazenie['kluczyk_bezdotykowy'] || false}
+                onChange={handleChange}
+              />
+              Kluczyk Bezdotykowy
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                name="wyposazenie_start_stop"
+                checked={formData.wyposazenie['start_stop'] || false}
+                onChange={handleChange}
+              />
+              System Start-Stop
+            </label>
+          </div>
+          )}
+        </div>
+      </section>
+
       {/* Sekcja zdjęć (przeniesione bliżej końca) */}
       <section className="form-section">
         <h3>Zdjęcia</h3>
@@ -780,16 +1405,18 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess }) => {
       </section>
 
       <div className="form-actions">
-        <button 
-          type="button" 
-          className="draft-button" 
-          onClick={saveDraft}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Zapisywanie...' : 'Zapisz wersję roboczą'}
-        </button>
-        <button type="submit" className="submit-button add-listing-button" disabled={isSubmitting}>
-          {isSubmitting ? 'Dodawanie...' : 'Dodaj ogłoszenie'}
+        {!isEditing && (
+          <button 
+            type="button" 
+            className="draft-button" 
+            onClick={saveDraft}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Zapisywanie...' : 'Zapisz wersję roboczą'}
+          </button>
+        )}
+        <button type="submit" className="submit-button add-listing-button" disabled={isSubmitting || isLoadingExisting}>
+          {isSubmitting ? (isEditing ? 'Aktualizowanie...' : 'Dodawanie...') : (isEditing ? 'Zaktualizuj ogłoszenie' : 'Dodaj ogłoszenie')}
         </button>
       </div>
       </form>

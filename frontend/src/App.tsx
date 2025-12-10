@@ -12,6 +12,7 @@ import Profile from './pages/Profile';
 import MyListings from './pages/MyListings';
 import Favorites from './pages/Favorites';
 import AddListingPage from './pages/AddListingPage';
+import EditListingPage from './pages/EditListingPage';
 import ClientPanel from './pages/ClientPanel';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
@@ -78,6 +79,14 @@ const AppRoutes: React.FC = () => {
       <Route 
         path="/dodaj-ogloszenie" 
         element={<AddListingPage />} 
+      />
+      <Route 
+        path="/ogloszenia/:id/edytuj" 
+        element={
+          <ProtectedRoute>
+            <EditListingPage />
+          </ProtectedRoute>
+        } 
       />
       <Route path="/regulamin" element={<TermsPage />} />
       <Route path="/polityka-prywatnosci" element={<PrivacyPage />} />
