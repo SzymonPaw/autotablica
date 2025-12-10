@@ -55,6 +55,14 @@ class OgloszenieResource extends JsonResource
                 ];
             }),
             'zdjecia' => ZdjecieResource::collection($this->whenLoaded('zdjecia')),
+            'historia_pojazdu' => $this->whenLoaded('historiaPojazdu', function () {
+                return [
+                    'status' => $this->historiaPojazdu->status,
+                    'payload' => $this->historiaPojazdu->payload,
+                    'fetched_at' => $this->historiaPojazdu->fetched_at?->toIso8601String(),
+                    'last_error_message' => $this->historiaPojazdu->last_error_message,
+                ];
+            }),
         ];
     }
 }

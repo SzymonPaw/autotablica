@@ -9,6 +9,7 @@ use App\Http\Resources\OgloszenieCollection;
 use App\Http\Resources\OgloszenieResource;
 use App\Models\Ogloszenie;
 use App\Models\User;
+use App\Services\HistoriaPojazdu\HistoriaPojazduManager;
 use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,10 @@ use Illuminate\Support\Str;
 
 class OgloszenieController extends Controller
 {
+    public function __construct(private readonly HistoriaPojazduManager $historiaPojazduManager)
+    {
+    }
+
     public function index(Request $request): OgloszenieCollection
     {
         $query = Ogloszenie::query()
@@ -139,7 +144,7 @@ class OgloszenieController extends Controller
 
         $listings = Ogloszenie::query()
             ->where('uzytkownik_id', $user?->id)
-            ->with(['marka', 'modelPojazdu', 'zdjecia'])
+            ->with(['marka', 'modelPojazdu', 'zdjecia', 'historiaPojazdu'])
             ->latest('created_at')
             ->get();
 
@@ -176,7 +181,9 @@ class OgloszenieController extends Controller
             'uzytkownik_id' => $user->id,
         ]);
 
-        $ogloszenie->load(['marka', 'modelPojazdu', 'zdjecia']);
+        $this->historiaPojazduManager->refreshForListing($ogloszenie);
+
+        $ogloszenie->load(['marka', 'modelPojazdu', 'zdjecia', 'historiaPojazdu']);
 
         return (new OgloszenieResource($ogloszenie))
             ->response()
@@ -185,7 +192,7 @@ class OgloszenieController extends Controller
 
     public function show(Ogloszenie $ogloszenie): OgloszenieResource
     {
-        $ogloszenie->loadMissing(['marka', 'modelPojazdu', 'zdjecia']);
+        $ogloszenie->loadMissing(['marka', 'modelPojazdu', 'zdjecia', 'historiaPojazdu']);
 
         return new OgloszenieResource($ogloszenie);
     }
@@ -197,7 +204,17 @@ class OgloszenieController extends Controller
         $ogloszenie->fill($validated);
         $ogloszenie->save();
 
-        $ogloszenie->load(['marka', 'modelPojazdu', 'zdjecia']);
+        $shouldRefreshHistory = $ogloszenie->wasChanged(['vin', 'numer_rejestracyjny', 'data_pierwszej_rej']);
+
+        if (! $shouldRefreshHistory) {
+            $shouldRefreshHistory = ! $ogloszenie->historiaPojazdu()->exists();
+        }
+
+        if ($shouldRefreshHistory) {
+            $this->historiaPojazduManager->refreshForListing($ogloszenie);
+        }
+
+        $ogloszenie->load(['marka', 'modelPojazdu', 'zdjecia', 'historiaPojazdu']);
 
         return new OgloszenieResource($ogloszenie);
     }

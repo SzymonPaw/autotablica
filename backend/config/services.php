@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'historia_pojazdu' => [
+        'base_url' => env('HISTORIA_POJAZDU_BASE_URL', 'https://moj.gov.pl'),
+        'app_name' => env('HISTORIA_POJAZDU_APP_NAME', 'HistoriaPojazdu'),
+        'api_version' => env('HISTORIA_POJAZDU_API_VERSION', '1.0.17'),
+        'timeout' => (int) env('HISTORIA_POJAZDU_TIMEOUT', 15),
+        'user_agent' => env('HISTORIA_POJAZDU_USER_AGENT'),
+    ],
+
 ];

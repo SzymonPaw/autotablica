@@ -13,6 +13,8 @@ import MyListings from './pages/MyListings';
 import Favorites from './pages/Favorites';
 import AddListingPage from './pages/AddListingPage';
 import ClientPanel from './pages/ClientPanel';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
 import LoadingScreen from './components/common/LoadingScreen';
 import './App.css';
 
@@ -77,20 +79,28 @@ const AppRoutes: React.FC = () => {
         path="/dodaj-ogloszenie" 
         element={<AddListingPage />} 
       />
+      <Route path="/regulamin" element={<TermsPage />} />
+      <Route path="/polityka-prywatnosci" element={<PrivacyPage />} />
     </Routes>
   );
 };
 
 const App: React.FC = () => {
   const location = useLocation();
-  const isHome = location.pathname === '/';
+  const currentPath = location.pathname;
+  const isHome = currentPath === '/';
+  const isProductPage = currentPath.startsWith('/ogloszenie/');
+  const containerClasses = ['container'];
+  if (isHome || isProductPage) {
+    containerClasses.push('home-full');
+  }
 
   return (
     <AuthProvider>
       <FavoritesProvider>
         <div className="AppRoot">
           <NavBar />
-          <main className={`container ${isHome ? 'home-full' : ''}`}>
+          <main className={containerClasses.join(' ')}>
             <AppRoutes />
           </main>
           <Footer />

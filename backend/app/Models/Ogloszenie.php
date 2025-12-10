@@ -88,4 +88,9 @@ class Ogloszenie extends Model
     {
         return $this->hasMany(Ulubione::class, 'ogloszenie_id');
     }
+
+    public function historiaPojazdu()
+    {
+        return $this->hasOne(HistoriaPojazdu::class, 'ogloszenie_id');
+    }
 }
