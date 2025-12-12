@@ -17,7 +17,7 @@ class UlubioneController extends Controller
         $user = $request->user();
 
         $query = Ogloszenie::query()
-            ->with(['marka', 'modelPojazdu', 'zdjecia'])
+            ->with(['marka', 'modelPojazdu', 'zdjecia', 'historiaPojazdu'])
             ->whereHas('ulubione', function ($builder) use ($user): void {
                 $builder->where('uzytkownik_id', $user->id);
             });

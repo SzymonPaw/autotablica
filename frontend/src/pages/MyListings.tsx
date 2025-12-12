@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import LoadingScreen from '../components/common/LoadingScreen';
 import MyDrafts from './MyDrafts';
 import './MyListings.css';
+import VerifiedBadge from '../components/VerifiedBadge';
+import { HistoriaPojazduSummary, isHistoryVerified, verifiedHistoryTitle } from '../utils/history';
 
 interface Listing {
   id: number;
@@ -15,6 +17,7 @@ interface Listing {
   created_at: string;
   updated_at: string;
   zdjecia: Array<{ id: number; url: string }>;
+  historia_pojazdu?: HistoriaPojazduSummary | null;
 }
 
 type ListingsView = 'listings' | 'drafts';
@@ -92,7 +95,7 @@ const MyListings: React.FC = () => {
   }
 
   return (
-    <div className="my-listings-page">
+    <div className="client-panel__card">
       <div className="page-header">
         <h1>Moje ogłoszenia</h1>
         <Link to="/dodaj-ogloszenie" className="btn-primary">
@@ -157,7 +160,12 @@ const MyListings: React.FC = () => {
                   </div>
                   
                   <div className="listing-content">
-                    <h3>{listing.tytul}</h3>
+                    <div className="my-listing-title-row">
+                      <h3>{listing.tytul}</h3>
+                      {isHistoryVerified(listing.historia_pojazdu) && (
+                        <VerifiedBadge title={verifiedHistoryTitle} />
+                      )}
+                    </div>
                     <p className="price">{listing.cena.toLocaleString('pl-PL')} zł</p>
                     <p className="date">
                       Dodano: {new Date(listing.created_at).toLocaleDateString('pl-PL')}

@@ -245,6 +245,7 @@
   .AppRoot .container.home-full .main-content {
     padding-left: 0.75rem; /* lewy margines */
     padding-right: 1.5rem; /* większy prawy margines dla wyraźnego odstępu */
+    padding-top: 0;
     gap: 1.5rem;
   }
 

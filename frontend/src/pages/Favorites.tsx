@@ -4,6 +4,8 @@ import { fetchFavoriteListings } from '../api/client';
 import { useFavorites } from '../contexts/FavoritesContext';
 import LoadingScreen from '../components/common/LoadingScreen';
 import './Favorites.css';
+import VerifiedBadge from '../components/VerifiedBadge';
+import { HistoriaPojazduSummary, isHistoryVerified, verifiedHistoryTitle } from '../utils/history';
 
 interface Listing {
   id: number;
@@ -12,6 +14,7 @@ interface Listing {
   cena: number;
   created_at: string;
   zdjecia: Array<{ id: number; url: string }>;
+  historia_pojazdu?: HistoriaPojazduSummary | null;
   user?: {
     id: number;
     name?: string | null;
@@ -81,9 +84,14 @@ const Favorites: React.FC = () => {
               </Link>
               
               <div className="favorite-content">
-                <Link to={`/ogloszenie/${listing.id}`} className="favorite-title">
-                  <h3>{listing.tytul}</h3>
-                </Link>
+                <div className="favorite-title-row">
+                  <Link to={`/ogloszenie/${listing.id}`} className="favorite-title">
+                    <h3>{listing.tytul}</h3>
+                  </Link>
+                  {isHistoryVerified(listing.historia_pojazdu) && (
+                    <VerifiedBadge title={verifiedHistoryTitle} />
+                  )}
+                </div>
                 <p className="favorite-price">{listing.cena.toLocaleString('pl-PL')} zł</p>
                 {listing.user?.name && (
                   <p className="favorite-seller">
