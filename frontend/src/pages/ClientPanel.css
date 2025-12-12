@@ -2,10 +2,10 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  width: 100%;
-  max-width: 1180px;
+  width: min(var(--page-shell-max-width), 100%);
   margin: 0 auto;
-  padding: 16px 12px 48px;
+  padding: 0 var(--page-shell-padding-inline) var(--page-shell-padding-bottom);
+  box-sizing: border-box;
 }
 
 .client-panel__header {
@@ -84,30 +84,49 @@
   color: #6b7280;
 }
 
-.client-panel__details {
+.client-panel__form {
   margin-top: 24px;
   display: grid;
-  gap: 16px;
+  gap: 20px;
 }
 
-.client-panel__details-row {
+.client-panel__form-row {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.client-panel__form-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f1f5f9;
+  gap: 8px;
 }
 
-.client-panel__details-row dt {
-  font-size: 12px;
-  letter-spacing: 0.08em;
+.client-panel__form-group label {
+  font-size: 13px;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #94a3b8;
+  font-weight: 600;
 }
 
-.client-panel__details-row dd {
+.client-panel__form-group input {
+  border: 1px solid #dbe2f3;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 15px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.client-panel__form-group input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.client-panel__static-value {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: #1f2937;
 }
@@ -116,6 +135,34 @@
   margin: 16px 0;
   color: #b91c1c;
   font-weight: 500;
+}
+
+.client-panel__success {
+  margin: 16px 0;
+  color: #15803d;
+  font-weight: 500;
+}
+
+.client-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.client-panel__password-card {
+  margin-top: 28px;
+  padding: 24px;
+  border-radius: 14px;
+  border: 1px solid #dbe2f3;
+  background: #f8fbff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.client-panel__password-card h3 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  color: #1f2937;
 }
 
 .btn-danger {
@@ -141,7 +188,7 @@
 
 @media (max-width: 768px) {
   .client-panel {
-    padding: 12px 10px 36px;
+    padding-bottom: var(--page-shell-padding-bottom);
   }
 
   .client-panel__tabs {
@@ -161,5 +208,13 @@
 
   .client-panel__card {
     padding: 22px;
+  }
+
+  .client-panel__form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .client-panel__password-card {
+    padding: 20px;
   }
 }

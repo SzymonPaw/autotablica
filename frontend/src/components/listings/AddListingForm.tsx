@@ -448,7 +448,7 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess, editingId })
   };
 
   return (
-    <div className="add-listing-page">
+    <div className="add-listing-form-wrapper">
       <form onSubmit={handleSubmit} className="add-listing-form">
       <h2>{isEditing ? 'Edytuj ogłoszenie' : 'Dodaj nowe ogłoszenie'}</h2>
 

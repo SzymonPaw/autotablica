@@ -97,6 +97,14 @@ interface RegisterPayload extends LoginPayload {
   name: string;
 }
 
+export interface UpdateProfilePayload {
+  name?: string;
+  email?: string;
+  current_password?: string;
+  password?: string;
+  password_confirmation?: string;
+}
+
 export async function login(payload: LoginPayload): Promise<AuthSuccessResponse> {
   const { data } = await authRequest<AuthSuccessResponse>('/auth/login', {
     method: 'POST',
@@ -133,6 +141,37 @@ export async function fetchProfile(token: string): Promise<UserProfile> {
   }
 
   return (data as { data: UserProfile }).data;
+}
+
+export async function updateProfile(token: string, payload: UpdateProfilePayload): Promise<UserProfile> {
+  const { data } = await authRequest<{ data: UserProfile }>('/auth/me', {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!data || typeof data !== 'object' || !('data' in data)) {
+    throw new Error('Nie udało się zaktualizować profilu.');
+  }
+
+  return (data as { data: UserProfile }).data;
+}
+
+export async function changePassword(
+  token: string,
+  payload: Required<Pick<UpdateProfilePayload, 'current_password' | 'password' | 'password_confirmation'>>,
+): Promise<void> {
+  await authRequest('/auth/password', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function logout(token: string): Promise<void> {

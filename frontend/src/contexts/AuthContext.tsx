@@ -1,11 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
+  changePassword as changePasswordRequest,
   deleteAccount as deleteAccountRequest,
   fetchProfile as fetchProfileRequest,
   login as loginRequest,
   logout as logoutRequest,
   register as registerRequest,
+  updateProfile as updateProfileRequest,
   UserProfile,
+  UpdateProfilePayload,
 } from '../api/auth';
 
 const TOKEN_STORAGE_KEY = 'autotablica_token';
@@ -18,6 +21,8 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   deleteAccount: () => Promise<void>;
+  updateProfile: (payload: UpdateProfilePayload) => Promise<UserProfile>;
+  changePassword: (currentPassword: string, password: string, confirmation: string) => Promise<void>;
   setToken: (token: string | null) => void;
 }
 
@@ -172,8 +177,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null);
   };
 
+  const updateProfile = async (payload: UpdateProfilePayload) => {
+    if (!token) {
+      throw new Error('Brak aktywnej sesji.');
+    }
+
+    const updated = await updateProfileRequest(token, payload);
+    setUser(updated);
+    return updated;
+  };
+
+  const changePassword = async (currentPassword: string, password: string, confirmation: string) => {
+    if (!token) {
+      throw new Error('Brak aktywnej sesji.');
+    }
+
+    await changePasswordRequest(token, {
+      current_password: currentPassword,
+      password,
+      password_confirmation: confirmation,
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, deleteAccount, setToken: persistToken }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        isLoading,
+        login,
+        register,
+        logout,
+        deleteAccount,
+        updateProfile,
+        changePassword,
+        setToken: persistToken,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -1,9 +1,10 @@
 .terms-page {
-  max-width: 960px;
+  width: min(var(--page-shell-max-width), 100%);
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 0 var(--page-shell-padding-inline) var(--page-shell-padding-bottom);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #0f172a;
+  box-sizing: border-box;
 }
 
 .terms-hero {
@@ -93,9 +94,6 @@
 }
 
 @media (max-width: 640px) {
-  .terms-page {
-    padding: 1.5rem 1rem 3rem;
-  }
   .terms-section {
     padding: 1.25rem;
   }

@@ -1,5 +1,8 @@
 .favorites-page {
-  padding: 2rem 0;
+  width: min(var(--page-shell-max-width), 100%);
+  margin: 0 auto;
+  padding: 0 var(--page-shell-padding-inline) var(--page-shell-padding-bottom);
+  box-sizing: border-box;
 }
 
 .favorites-page h1 {
@@ -70,9 +73,16 @@
   padding: 1rem;
 }
 
+.favorite-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .favorite-title {
   text-decoration: none;
   color: inherit;
+  flex: 1;
 }
 
 .favorite-title h3 {
@@ -80,6 +90,10 @@
   color: #333;
   font-size: 1.1rem;
   transition: color 0.2s;
+}
+
+.favorite-title-row .verified-badge {
+  flex-shrink: 0;
 }
 
 .favorite-title:hover h3 {

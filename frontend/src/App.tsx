@@ -95,14 +95,7 @@ const AppRoutes: React.FC = () => {
 };
 
 const App: React.FC = () => {
-  const location = useLocation();
-  const currentPath = location.pathname;
-  const isHome = currentPath === '/';
-  const isProductPage = currentPath.startsWith('/ogloszenie/');
-  const containerClasses = ['container'];
-  if (isHome || isProductPage) {
-    containerClasses.push('home-full');
-  }
+  const containerClasses = ['container', 'home-full'];
 
   return (
     <AuthProvider>

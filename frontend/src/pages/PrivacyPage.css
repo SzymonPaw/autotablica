@@ -1,9 +1,10 @@
 .privacy-page {
-  max-width: 960px;
+  width: min(var(--page-shell-max-width), 100%);
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 0 var(--page-shell-padding-inline) var(--page-shell-padding-bottom);
   color: #0f172a;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  box-sizing: border-box;
 }
 
 .privacy-hero {
@@ -77,9 +78,6 @@
 }
 
 @media (max-width: 640px) {
-  .privacy-page {
-    padding: 1.5rem 1rem 3rem;
-  }
   .privacy-section {
     padding: 1.25rem;
   }

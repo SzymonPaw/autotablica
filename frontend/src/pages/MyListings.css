@@ -1,5 +1,8 @@
 .my-listings-page {
-  padding: 2rem 0;
+  width: min(var(--page-shell-max-width), 100%);
+  margin: 0 auto;
+  padding: 0 var(--page-shell-padding-inline) var(--page-shell-padding-bottom);
+  box-sizing: border-box;
 }
 
 .page-header {
@@ -125,10 +128,24 @@
   padding: 1rem;
 }
 
+.my-listing-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .listing-content h3 {
   margin: 0 0 0.5rem;
   color: #333;
   font-size: 1.1rem;
+}
+
+.my-listing-title-row h3 {
+  flex: 1;
+}
+
+.my-listing-title-row .verified-badge {
+  flex-shrink: 0;
 }
 
 .price {

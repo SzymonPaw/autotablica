@@ -4,6 +4,9 @@ import './Listing.css';
 import { cleanTitle, titleFromBrandModel } from '../utils/title';
 import { formatPrice } from '../utils/format';
 import FavoriteButton from './FavoriteButton';
+import VerifiedBadge from './VerifiedBadge';
+import { HistoriaPojazduSummary, isHistoryVerified, verifiedHistoryTitle } from '../utils/history';
+import LoadingScreen from './common/LoadingScreen';
 
 interface Zdjecie { id: number; url?: string | null }
 interface Ogloszenie {
@@ -21,8 +24,8 @@ interface Ogloszenie {
   moc_silnika?: number | string | null;
   pojemnosc_silnika?: number | string | null;
   skrzynia_biegow?: string | null;
-  wyposazenie?: { [key: string]: boolean } | null;
   zdjecia?: Zdjecie[];
+  historia_pojazdu?: HistoriaPojazduSummary | null;
 }
 
 type Props = {
@@ -87,7 +90,7 @@ const formatGeneric = (value?: number | string | null) => {
 
 const Listing: React.FC<Props> = ({ items, loading, error }) => {
 
-  if (loading) return <p>Ładowanie ogłoszeń...</p>;
+  if (loading) return <LoadingScreen />;
   if (error) return <p className="feedback error">{error}</p>;
   if (!items || items.length === 0) return <p className="empty">Brak ogłoszeń do wyświetlenia.</p>;
 
@@ -99,6 +102,7 @@ const Listing: React.FC<Props> = ({ items, loading, error }) => {
         const fallbackTitle = titleFromBrandModel(item.marka, item.model, cleanTitle(item.tytul));
         const listingTitle = cleanTitle(item.tytul) || fallbackTitle;
         const price = typeof item.cena === 'string' ? Number(item.cena) : (item.cena as number | null);
+        const verified = isHistoryVerified(item.historia_pojazdu);
         return (
           <li key={item.id} className="ogloszenie-item">
             <FavoriteButton
@@ -116,6 +120,7 @@ const Listing: React.FC<Props> = ({ items, loading, error }) => {
             <div className="card-body">
               <h3 className="card-title">
                 <Link to={`/ogloszenie/${item.id}`}>{listingTitle}</Link>
+                {verified && <VerifiedBadge title={verifiedHistoryTitle} />}
               </h3>
               <dl className="card-specs">
                 <div className="spec-item">

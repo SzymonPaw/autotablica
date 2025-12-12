@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingScreen from '../components/common/LoadingScreen';
 import MyDrafts from './MyDrafts';
 import './MyListings.css';
+import VerifiedBadge from '../components/VerifiedBadge';
+import { HistoriaPojazduSummary, isHistoryVerified, verifiedHistoryTitle } from '../utils/history';
 
 interface Listing {
   id: number;
@@ -15,6 +17,7 @@ interface Listing {
   created_at: string;
   updated_at: string;
   zdjecia: Array<{ id: number; url: string }>;
+  historia_pojazdu?: HistoriaPojazduSummary | null;
 }
 
 type ListingsView = 'listings' | 'drafts';
@@ -25,6 +28,7 @@ const MyListings: React.FC = () => {
   const initialView = (searchParams.get('view') as ListingsView) || 'listings';
   const [activeView, setActiveView] = useState<ListingsView>(initialView === 'drafts' ? 'drafts' : 'listings');
   const [listings, setListings] = useState<Listing[]>([]);
+  const [statusFilter, setStatusFilter] = useState<'all' | Listing['status']>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,12 +91,18 @@ const MyListings: React.FC = () => {
     }
   };
 
+  const filteredListings = useMemo(
+    () => (statusFilter === 'all' ? listings : listings.filter(listing => listing.status === statusFilter)),
+    [listings, statusFilter]
+  );
+  const hasAnyListings = listings.length > 0;
+
   if (isLoading) {
     return <LoadingScreen />;
   }
 
   return (
-    <div className="my-listings-page">
+    <div className="client-panel__card">
       <div className="page-header">
         <h1>Moje ogłoszenia</h1>
         <Link to="/dodaj-ogloszenie" className="btn-primary">
@@ -122,28 +132,46 @@ const MyListings: React.FC = () => {
           {error && <div className="error-message">{error}</div>}
 
           <div className="listings-filters sub">
-            <button className="filter-btn active">Wszystkie ({listings?.length ?? 0})</button>
-            <button className="filter-btn">
+            <button
+              className={`filter-btn ${statusFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('all')}
+            >
+              Wszystkie ({listings?.length ?? 0})
+            </button>
+            <button
+              className={`filter-btn ${statusFilter === 'aktywne' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('aktywne')}
+            >
               Aktywne ({(listings || []).filter(l => l.status === 'aktywne').length})
             </button>
-            <button className="filter-btn">
+            <button
+              className={`filter-btn ${statusFilter === 'nieaktywne' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('nieaktywne')}
+            >
               Nieaktywne ({(listings || []).filter(l => l.status === 'nieaktywne').length})
             </button>
-            <button className="filter-btn">
+            <button
+              className={`filter-btn ${statusFilter === 'sprzedane' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('sprzedane')}
+            >
               Sprzedane ({(listings || []).filter(l => l.status === 'sprzedane').length})
             </button>
           </div>
 
-          {listings.length === 0 ? (
+          {filteredListings.length === 0 ? (
             <div className="empty-state">
-              <p>Nie masz jeszcze żadnych ogłoszeń</p>
-              <Link to="/dodaj-ogloszenie" className="btn-primary">
-                Dodaj pierwsze ogłoszenie
-              </Link>
+              <p>
+                {hasAnyListings ? 'Brak ogłoszeń w tej kategorii' : 'Nie masz jeszcze żadnych ogłoszeń'}
+              </p>
+              {!hasAnyListings && (
+                <Link to="/dodaj-ogloszenie" className="btn-primary">
+                  Dodaj pierwsze ogłoszenie
+                </Link>
+              )}
             </div>
           ) : (
             <div className="listings-grid">
-              {listings.map(listing => (
+              {filteredListings.map(listing => (
                 <div key={listing.id} className="listing-card">
                   <div className="listing-image">
                     {listing.zdjecia && listing.zdjecia.length > 0 ? (
@@ -157,7 +185,12 @@ const MyListings: React.FC = () => {
                   </div>
                   
                   <div className="listing-content">
-                    <h3>{listing.tytul}</h3>
+                    <div className="my-listing-title-row">
+                      <h3>{listing.tytul}</h3>
+                      {isHistoryVerified(listing.historia_pojazdu) && (
+                        <VerifiedBadge title={verifiedHistoryTitle} />
+                      )}
+                    </div>
                     <p className="price">{listing.cena.toLocaleString('pl-PL')} zł</p>
                     <p className="date">
                       Dodano: {new Date(listing.created_at).toLocaleDateString('pl-PL')}

@@ -1,5 +1,9 @@
 ﻿:root {
 	color-scheme: light;
+	--page-shell-max-width: 1320px;
+	--page-shell-padding-inline: clamp(1rem, 4vw, 3.5rem);
+	--page-shell-padding-top: 32px;
+	--page-shell-padding-bottom: 72px;
 }
 
 body {
@@ -24,26 +28,28 @@ body {
 /* Ensure main content is offset below the fixed navbar. Uses the nav variable
    set in NavBar.css (--nav-height). Falls back to 80px if not present. */
 .AppRoot .container {
-	max-width: 960px;
-	margin: calc(var(--nav-height, 80px)) auto 0;
-	padding: 32px 16px 64px;
+	max-width: none;
+	width: 100%;
+	margin: calc(var(--nav-height, 80px)) 0 0;
+	padding: var(--page-shell-padding-top) 0 var(--page-shell-padding-bottom);
+	box-sizing: border-box;
 }
 
 /* Pełna szerokość kontenera tylko na stronie głównej */
 .AppRoot .container.home-full {
-	max-width: none;
-	width: 100%;
-	margin: calc(var(--nav-height, 80px)) 0 0;
-	padding-left: 0;
-	padding-right: 0;
-	overflow-x: hidden; /* zabezpieczenie przed przypadkowym poziomym przewijaniem */
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    overflow-x: hidden;
+    padding: 80px 0 10px;
 }
 
 .App {
-	max-width: 960px;
-	margin: 80px auto 0; /* Dodajemy margines na górze dla nawigacji */
-	padding: 32px 16px 64px;
+	width: min(var(--page-shell-max-width), 100%);
+	margin: 0 auto;
+	padding: 0 var(--page-shell-padding-inline) var(--page-shell-padding-bottom);
 	line-height: 1.6;
+	box-sizing: border-box;
 }
 
 h1,
@@ -318,10 +324,9 @@ button:hover {
 
 /* Product detail layout and gallery (spójność ze stroną główną) */
 .product-page-wrapper {
-	width: 100%;
-	max-width: calc(1320px + 4rem);
+	width: min(var(--page-shell-max-width), 100%);
 	margin: 0 auto;
-	padding: 1.5rem 2rem 64px;
+	padding: 0 var(--page-shell-padding-inline) var(--page-shell-padding-bottom);
 	box-sizing: border-box;
 }
 
@@ -367,6 +372,16 @@ button:hover {
 	border-bottom: 1px solid #e4ebf5;
 }
 
+.detail-title {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.detail-title .verified-badge {
+	flex-shrink: 0;
+}
+
 .detail-headline h1 {
 	margin: 0;
 	font-size: 1.75rem;
@@ -402,59 +417,6 @@ button:hover {
 
 .spec {
 	margin-top: 12px;
-}
-
-/* Sekcja wyposażenia ma większe kafelki */
-.equipment-accordion-list {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-}
-
-.equipment-accordion-item {
-	border: 1px solid #e2e8f0;
-	border-radius: 10px;
-	background: #fff;
-	overflow: hidden;
-}
-
-.equipment-accordion-header {
-	width: 100%;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 12px 14px;
-	background: #f8fafc;
-	border: none;
-	cursor: pointer;
-	font-weight: 600;
-	color: #1e293b;
-}
-
-.equipment-accordion-header:hover {
-	background: #f1f5f9;
-}
-
-.equipment-accordion-content {
-	list-style: none;
-	margin: 0;
-	padding: 10px 14px 14px 18px;
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-}
-
-.equipment-accordion-content li {
-	color: #334155;
-}
-
-.chevron {
-	transition: transform 0.18s ease;
-	font-size: 14px;
-}
-
-.chevron.open {
-	transform: rotate(180deg);
 }
 
 .detail-sections {
@@ -604,6 +566,16 @@ button:hover {
 	gap: 0.5rem;
 }
 
+.related-card-title-row {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+
+.related-card-title-row .verified-badge {
+	flex-shrink: 0;
+}
+
 .related-card-brand {
 	font-size: 0.8rem;
 	letter-spacing: 0.08em;
@@ -615,6 +587,7 @@ button:hover {
 	margin: 0;
 	font-size: 1rem;
 	color: #1f2937;
+	flex: 1;
 }
 
 .related-card-price {
@@ -1190,5 +1163,4 @@ button:hover {
 	color: #fff;
 	font-size: 0.9rem;
 }
-
 

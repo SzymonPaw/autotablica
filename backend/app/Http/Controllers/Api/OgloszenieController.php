@@ -24,7 +24,8 @@ class OgloszenieController extends Controller
     public function index(Request $request): OgloszenieCollection
     {
         $query = Ogloszenie::query()
-            ->with(['marka', 'modelPojazdu', 'zdjecia']);
+            ->where('status', 'aktywne')
+            ->with(['marka', 'modelPojazdu', 'zdjecia', 'historiaPojazdu']);
 
         $filters = [];
 
@@ -199,9 +200,6 @@ class OgloszenieController extends Controller
 
     public function update(UpdateOgloszenieRequest $request, Ogloszenie $ogloszenie): OgloszenieResource
     {
-        // Autoryzacja jest już sprawdzana w UpdateOgloszenieRequest::authorize()
-        // $this->authorize('update', $ogloszenie);
-
         $validated = $request->validated();
 
         $ogloszenie->fill($validated);
