@@ -36,15 +36,21 @@
 }
 
 /* Miniatura 16:9 */
+
 .thumb-wrapper {
-  display: block;
   position: relative;
+  width: 100%;
+}
+
+.thumb-link {
+  display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
   background: #f2f4f7;
-  overflow: hidden; /* ukryj nadmiar przy powiększaniu obrazka */
+  overflow: hidden;
   text-decoration: none;
   color: inherit;
+  position: relative;
 }
 
 .thumb {
@@ -52,10 +58,9 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.3s ease; /* płynny zoom na hover */
+  transition: transform 0.3s ease;
 }
 
-/* Upewnij się, że style galerii (72x72) nie wpływają na listingi */
 .ogloszenie-item .thumb {
   width: 100%;
   height: 100%;
@@ -67,6 +72,54 @@
   justify-content: center;
   color: #7f8c8d;
   font-size: 0.95rem;
+}
+
+.thumb-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(15, 23, 42, 0.65);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  transition: background 0.2s ease;
+}
+
+.thumb-arrow span {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.thumb-arrow:hover,
+.thumb-arrow:focus-visible {
+  background: rgba(15, 23, 42, 0.85);
+}
+
+.thumb-arrow.prev {
+  left: 8px;
+}
+
+.thumb-arrow.next {
+  right: 8px;
+}
+
+.thumb-counter {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  background: rgba(15, 23, 42, 0.7);
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  z-index: 3;
 }
 
 .card-body {
@@ -181,13 +234,13 @@
 }
 
 /* Desktop domyślnie: 5:4 — większe zdjęcie bez przesady na PC */
-.listings.promoted .thumb-wrapper {
+.listings.promoted .thumb-link {
   aspect-ratio: 5 / 4;
 }
 
 /* Na mniejszych ekranach podbijamy wysokość zdjęcia do 1:1 */
 @media (max-width: 1024px) {
-  .listings.promoted .thumb-wrapper {
+  .listings.promoted .thumb-link {
     aspect-ratio: 1 / 1;
   }
 }
@@ -216,7 +269,7 @@
 }
 
 /* Wszystkie ogłoszenia – wygląd jak wcześniejsze promowane (przed ostatnimi zmianami) */
-.listings.all-listings .thumb-wrapper {
+.listings.all-listings .thumb-link {
   aspect-ratio: 4 / 3;
 }
 

@@ -24,7 +24,7 @@ class OgloszenieController extends Controller
     public function index(Request $request): OgloszenieCollection
     {
         $query = Ogloszenie::query()
-            ->where('status', 'aktywne')
+            ->whereIn('status', ['aktywne', 'aktywny'])
             ->with(['marka', 'modelPojazdu', 'zdjecia', 'historiaPojazdu']);
 
         $filters = [];

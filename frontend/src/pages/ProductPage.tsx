@@ -423,6 +423,7 @@ const ProductPage: React.FC = () => {
 
   const images = Array.isArray(item?.zdjecia) ? item!.zdjecia!.filter(z => z && z.url) : [];
   const main = images.length > 0 ? images[mainIndex]?.url ?? null : null;
+  const hasInlineGallery = images.length > 1;
 
   const openLightbox = useCallback((index: number) => {
     setLightboxIndex(index);
@@ -440,6 +441,21 @@ const ProductPage: React.FC = () => {
   const showNext = useCallback(() => {
     setLightboxIndex(prev => (prev + 1) % images.length);
   }, [images.length]);
+
+  const handleInlineNavigation = useCallback((direction: 'prev' | 'next') => {
+    if (!hasInlineGallery) return;
+    setMainIndex((prev) => {
+      const total = images.length;
+      if (total <= 1) return prev;
+      const nextIndex = direction === 'prev'
+        ? (prev - 1 + total) % total
+        : (prev + 1) % total;
+      if (lightboxOpen) {
+        setLightboxIndex(nextIndex);
+      }
+      return nextIndex;
+    });
+  }, [hasInlineGallery, images.length, lightboxOpen]);
 
   useEffect(() => {
     if (!lightboxOpen) return;
@@ -665,19 +681,45 @@ const ProductPage: React.FC = () => {
       <article className="ogloszenie-detail">
       <div className="detail-grid">
         <div className="gallery">
-          {main ? (
-            <img
-              className="main-image"
-              src={main}
-              alt={computedTitle}
-              onClick={() => openLightbox(mainIndex)}
-              style={{cursor: images.length > 0 ? 'zoom-in' : 'default'}}
-            />
-          ) : (
-            <div className="no-image">Brak zdjęcia</div>
-          )}
+          <div className="main-image-wrapper">
+            {main ? (
+              <img
+                className="main-image"
+                src={main}
+                alt={computedTitle}
+                onClick={() => openLightbox(mainIndex)}
+                style={{cursor: images.length > 0 ? 'zoom-in' : 'default'}}
+              />
+            ) : (
+              <div className="no-image">Brak zdjęcia</div>
+            )}
 
-          {images.length > 1 && (
+            {hasInlineGallery && (
+              <>
+                <button
+                  type="button"
+                  className="gallery-arrow prev"
+                  aria-label="Poprzednie zdjęcie"
+                  onClick={() => handleInlineNavigation('prev')}
+                >
+                  <span aria-hidden="true">‹</span>
+                </button>
+                <button
+                  type="button"
+                  className="gallery-arrow next"
+                  aria-label="Następne zdjęcie"
+                  onClick={() => handleInlineNavigation('next')}
+                >
+                  <span aria-hidden="true">›</span>
+                </button>
+                <div className="gallery-counter" aria-live="polite">
+                  {mainIndex + 1} / {images.length}
+                </div>
+              </>
+            )}
+          </div>
+
+          {hasInlineGallery && (
             <div className="thumbnails">
               {images.map((img, idx) => (
                 <button

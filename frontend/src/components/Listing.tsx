@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Listing.css';
 import { cleanTitle, titleFromBrandModel } from '../utils/title';
@@ -32,6 +32,7 @@ type Props = {
   items: Ogloszenie[];
   loading?: boolean;
   error?: string | null;
+  showGalleryControls?: boolean;
 };
 
 const numberFormatter = new Intl.NumberFormat('pl-PL');
@@ -88,7 +89,18 @@ const formatGeneric = (value?: number | string | null) => {
   return String(value);
 };
 
-const Listing: React.FC<Props> = ({ items, loading, error }) => {
+const Listing: React.FC<Props> = ({ items, loading, error, showGalleryControls = false }) => {
+  const [photoIndexes, setPhotoIndexes] = useState<Record<number, number>>({});
+
+  const updatePhotoIndex = (listingId: number, direction: 1 | -1, totalPhotos: number) => {
+    if (totalPhotos <= 1) return;
+    setPhotoIndexes((prev) => {
+      const current = prev[listingId] ?? 0;
+      const next = (current + direction + totalPhotos) % totalPhotos;
+      if (next === current) return prev;
+      return { ...prev, [listingId]: next };
+    });
+  };
 
   if (loading) return <LoadingScreen />;
   if (error) return <p className="feedback error">{error}</p>;
@@ -98,7 +110,14 @@ const Listing: React.FC<Props> = ({ items, loading, error }) => {
     <>
     <ul className="ogloszenia-list">
       {items.map((item) => {
-        const firstPhoto = Array.isArray(item.zdjecia) && item.zdjecia.length > 0 ? (item.zdjecia[0]?.url ?? null) : null;
+        const photos = Array.isArray(item.zdjecia)
+          ? item.zdjecia.filter((photo) => Boolean(photo?.url))
+          : [];
+        const totalPhotos = photos.length;
+        const safeIndex = totalPhotos > 0 ? (photoIndexes[item.id] ?? 0) % totalPhotos : 0;
+        const currentPhoto = totalPhotos > 0 ? (photos[safeIndex]?.url ?? null) : null;
+        const firstPhoto = currentPhoto;
+        const galleryEnabled = showGalleryControls && totalPhotos > 1;
         const fallbackTitle = titleFromBrandModel(item.marka, item.model, cleanTitle(item.tytul));
         const listingTitle = cleanTitle(item.tytul) || fallbackTitle;
         const price = typeof item.cena === 'string' ? Number(item.cena) : (item.cena as number | null);
@@ -109,13 +128,46 @@ const Listing: React.FC<Props> = ({ items, loading, error }) => {
               listingId={item.id}
               className="listing-favorite-button"
             />
-            <Link to={`/ogloszenie/${item.id}`} className="thumb-wrapper" aria-label={listingTitle}>
-              {firstPhoto ? (
-                <img className="thumb" src={firstPhoto} alt={listingTitle} loading="lazy" decoding="async" />
-              ) : (
-                <div className="thumb placeholder">Brak zdjęcia</div>
+            <div className="thumb-wrapper">
+              <Link to={`/ogloszenie/${item.id}`} className="thumb-link" aria-label={listingTitle}>
+                {firstPhoto ? (
+                  <img className="thumb" src={firstPhoto} alt={listingTitle} loading="lazy" decoding="async" />
+                ) : (
+                  <div className="thumb placeholder">Brak zdjęcia</div>
+                )}
+              </Link>
+              {galleryEnabled && (
+                <>
+                  <button
+                    type="button"
+                    className="thumb-arrow prev"
+                    aria-label="Poprzednie zdjęcie"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      updatePhotoIndex(item.id, -1, totalPhotos);
+                    }}
+                  >
+                    <span aria-hidden="true">‹</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="thumb-arrow next"
+                    aria-label="Następne zdjęcie"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      updatePhotoIndex(item.id, 1, totalPhotos);
+                    }}
+                  >
+                    <span aria-hidden="true">›</span>
+                  </button>
+                  <div className="thumb-counter" aria-live="polite">
+                    {safeIndex + 1}/{totalPhotos}
+                  </div>
+                </>
               )}
-            </Link>
+            </div>
 
             <div className="card-body">
               <h3 className="card-title">

@@ -163,7 +163,12 @@ const Home: React.FC = () => {
               </div>
             </div>
 
-            <Listing items={promoted} loading={loading} error={error} />
+            <Listing
+              items={promoted}
+              loading={loading}
+              error={error}
+              showGalleryControls
+            />
 
             <div className="load-more">
               <Link to="/ogloszenia" className="btn-secondary">Pokaż wszystkie ogłoszenia</Link>

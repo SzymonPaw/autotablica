@@ -306,7 +306,7 @@ const AddListingForm: React.FC<AddListingFormProps> = ({ onSuccess, editingId })
       rodzaj_paliwa: formData.rodzaj_paliwa,
       skrzynia_biegow: formData.skrzynia_biegow,
       pojemnosc_silnika: pojemnoscLitry || 0,
-      status: 'aktywny',
+      status: 'aktywne',
       wyposazenie: Object.keys(wyposazenie).length > 0 ? wyposazenie : null,
     };
   };

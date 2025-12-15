@@ -67,16 +67,53 @@ const Detail: React.FC = () => {
 
   const images = Array.isArray(item.zdjecia) ? item.zdjecia.filter((z) => z && z.url) : [];
   const mainImage = images.length > 0 ? images[mainImageIndex]?.url : null;
+  const hasGalleryControls = images.length > 1;
+
+  const handleMainImageNav = (direction: 'prev' | 'next') => {
+    if (!hasGalleryControls) return;
+    setMainImageIndex((prev) => {
+      if (direction === 'prev') {
+        return prev === 0 ? images.length - 1 : prev - 1;
+      }
+      return prev === images.length - 1 ? 0 : prev + 1;
+    });
+  };
 
   return (
     <article className="ogloszenie-detail card">
       <div className="detail-grid">
         <div className="gallery">
-          {mainImage ? (
-            <img className="main-image" src={mainImage} alt={cleanTitle(item.tytul)} />
-          ) : (
-            <div className="no-image">Brak zdjęcia</div>
-          )}
+          <div className="main-image-wrapper">
+            {mainImage ? (
+              <img className="main-image" src={mainImage} alt={cleanTitle(item.tytul)} />
+            ) : (
+              <div className="no-image">Brak zdjęcia</div>
+            )}
+
+            {hasGalleryControls && (
+              <>
+                <button
+                  type="button"
+                  className="gallery-arrow prev"
+                  onClick={() => handleMainImageNav('prev')}
+                  aria-label="Poprzednie zdjęcie"
+                >
+                  <span aria-hidden="true">‹</span>
+                </button>
+                <button
+                  type="button"
+                  className="gallery-arrow next"
+                  onClick={() => handleMainImageNav('next')}
+                  aria-label="Następne zdjęcie"
+                >
+                  <span aria-hidden="true">›</span>
+                </button>
+                <div className="gallery-counter">
+                  {mainImageIndex + 1} / {images.length}
+                </div>
+              </>
+            )}
+          </div>
 
           {images.length > 1 && (
             <div className="thumbnails">
