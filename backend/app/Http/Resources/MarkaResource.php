@@ -14,6 +14,7 @@ class MarkaResource extends JsonResource
         return [
             'id' => $this->id,
             'nazwa' => $this->nazwa,
+            'ogloszenia_count' => (int) ($this->ogloszenia_count ?? 0),
         ];
     }
 }

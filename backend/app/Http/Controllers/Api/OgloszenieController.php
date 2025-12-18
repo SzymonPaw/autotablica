@@ -55,16 +55,26 @@ class OgloszenieController extends Controller
             $filters['cena_max'] = $value;
         }
 
-        if ($request->filled('marka_id')) {
-            $value = (int) $request->input('marka_id');
-            $query->where('marka_id', $value);
-            $filters['marka_id'] = $value;
+        $markaFilters = $this->normalizeIds($request->input('marka_ids', $request->input('marka_id')));
+        if (! empty($markaFilters)) {
+            if (count($markaFilters) === 1) {
+                $query->where('marka_id', $markaFilters[0]);
+                $filters['marka_id'] = $markaFilters[0];
+            } else {
+                $query->whereIn('marka_id', $markaFilters);
+                $filters['marka_ids'] = $markaFilters;
+            }
         }
 
-        if ($request->filled('model_id')) {
-            $value = (int) $request->input('model_id');
-            $query->where('model_id', $value);
-            $filters['model_id'] = $value;
+        $modelFilters = $this->normalizeIds($request->input('model_ids', $request->input('model_id')));
+        if (! empty($modelFilters)) {
+            if (count($modelFilters) === 1) {
+                $query->where('model_id', $modelFilters[0]);
+                $filters['model_id'] = $modelFilters[0];
+            } else {
+                $query->whereIn('model_id', $modelFilters);
+                $filters['model_ids'] = $modelFilters;
+            }
         }
 
         if ($request->filled('paliwo')) {
@@ -227,5 +237,32 @@ class OgloszenieController extends Controller
         $ogloszenie->delete();
 
         return response()->json(null, 204);
+    }
+
+    /**
+     * Normalize incoming request values into an array of unique positive integers.
+     */
+    private function normalizeIds($value): array
+    {
+        if ($value === null || $value === '') {
+            return [];
+        }
+
+        $items = is_array($value)
+            ? $value
+            : array_map('trim', explode(',', (string) $value));
+
+        return collect($items)
+            ->map(function ($item): ?int {
+                if (is_numeric($item)) {
+                    return (int) $item;
+                }
+
+                return null;
+            })
+            ->filter(fn (?int $id): bool => $id !== null && $id > 0)
+            ->unique()
+            ->values()
+            ->all();
     }
 }

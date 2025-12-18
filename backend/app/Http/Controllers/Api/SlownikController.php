@@ -22,6 +22,7 @@ class SlownikController extends Controller
             'slowniki_marki',
             self::CACHE_TTL_SECONDS,
             static fn (): Collection => Marka::query()
+                ->withCount('ogloszenia')
                 ->orderBy('nazwa')
                 ->get()
         );
@@ -43,7 +44,9 @@ class SlownikController extends Controller
             $cacheKey,
             self::CACHE_TTL_SECONDS,
             static function () use ($markaId): Collection {
-                $query = ModelPojazdu::query()->orderBy('nazwa');
+                $query = ModelPojazdu::query()
+                    ->withCount('ogloszenia')
+                    ->orderBy('nazwa');
 
                 if ($markaId !== null) {
                     $query->where('marka_id', $markaId);

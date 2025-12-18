@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css';
 import Listing from '../components/Listing';
@@ -39,13 +39,18 @@ const Home: React.FC = () => {
   // Basic filters
   const [brands, setBrands] = useState<MarkaDto[]>([]);
   const [models, setModels] = useState<ModelDto[]>([]);
-  const [markaId, setMarkaId] = useState<string>('');
-  const [modelId, setModelId] = useState<string>('');
+  const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
+  const [selectedModels, setSelectedModels] = useState<number[]>([]);
   const [cenaMin, setCenaMin] = useState<string>('');
   const [cenaMax, setCenaMax] = useState<string>('');
   const [rokMin, setRokMin] = useState<string>('');
   const [rokMax, setRokMax] = useState<string>('');
   const [popularStats, setPopularStats] = useState<PopularStatsResponse | null>(null);
+  const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const brandDropdownRef = useRef<HTMLDivElement | null>(null);
+  const modelDropdownRef = useRef<HTMLDivElement | null>(null);
+  const dropdownOverlayActive = brandDropdownOpen || modelDropdownOpen;
 
   // Pobierz 12 najnowszych ogłoszeń do sekcji promowane
   useEffect(() => {
@@ -74,32 +79,33 @@ const Home: React.FC = () => {
     return () => { mounted = false; };
   }, []);
 
-  // Load models when brand changes
+  // Load models when a single brand is selected
   useEffect(() => {
     let mounted = true;
+
+    if (selectedBrands.length !== 1) {
+      setModels([]);
+      setSelectedModels([]);
+      return () => { mounted = false; };
+    }
+
+    const brandId = selectedBrands[0];
+
     (async () => {
       try {
-        if (!markaId) {
-          setModels([]);
-          setModelId('');
-          return;
-        }
-        const ms = await fetchModels(Number(markaId));
+        const ms = await fetchModels(brandId);
         if (!mounted) return;
         setModels(ms);
-        setModelId(prev => {
-          if (!prev) {
-            return prev;
-          }
-          return ms.some(m => String(m.id) === prev) ? prev : '';
-        });
+        setSelectedModels(prev => prev.filter((id) => ms.some((model) => model.id === id)));
       } catch {
         if (!mounted) return;
         setModels([]);
+        setSelectedModels([]);
       }
     })();
+
     return () => { mounted = false; };
-  }, [markaId]);
+  }, [selectedBrands]);
 
   useEffect(() => {
     let mounted = true;
@@ -134,13 +140,113 @@ const Home: React.FC = () => {
     return (popularStats.brands?.length ?? 0) > 0 || (popularStats.models?.length ?? 0) > 0;
   }, [popularStats]);
 
+  const modelsDisabled = selectedBrands.length !== 1;
+
+  const toggleBrand = (brandId: number) => {
+    setSelectedBrands(prev =>
+      prev.includes(brandId)
+        ? prev.filter((id) => id !== brandId)
+        : [...prev, brandId]
+    );
+  };
+
+  const toggleModel = (modelId: number) => {
+    setSelectedModels(prev =>
+      prev.includes(modelId)
+        ? prev.filter((id) => id !== modelId)
+        : [...prev, modelId]
+    );
+  };
+
+  const formatSummary = (
+    selectedIds: number[],
+    dictionary: { id: number; nazwa: string }[],
+    emptyLabel: string,
+    fallbackLabel: (count: number) => string
+  ): string => {
+    if (!selectedIds.length) {
+      return emptyLabel;
+    }
+
+    const names = selectedIds
+      .map((id) => dictionary.find((item) => item.id === id)?.nazwa)
+      .filter((name): name is string => Boolean(name));
+
+    if (names.length === 1) {
+      return names[0];
+    }
+
+    if (names.length >= 2) {
+      const [first, second] = names;
+      if (names.length === 2) {
+        return `${first}, ${second}`;
+      }
+      return `${first}, ${second} +${names.length - 2}`;
+    }
+
+    return fallbackLabel(selectedIds.length);
+  };
+
+  const brandSummary = useMemo(() => (
+    formatSummary(selectedBrands, brands, 'Wszystkie marki', (count) => `${count} marki`)
+  ), [selectedBrands, brands]);
+
+  const modelSummary = useMemo(() => {
+    if (modelsDisabled) {
+      return 'Wybierz jedną markę';
+    }
+    return formatSummary(selectedModels, models, 'Wszystkie modele', (count) => `${count} modeli`);
+  }, [selectedModels, models, modelsDisabled]);
+
+  useEffect(() => {
+    if (!brandDropdownOpen) return undefined;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!brandDropdownRef.current) return;
+      if (!brandDropdownRef.current.contains(event.target as Node)) {
+        setBrandDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [brandDropdownOpen]);
+
+  useEffect(() => {
+    if (!modelDropdownOpen) return undefined;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!modelDropdownRef.current) return;
+      if (!modelDropdownRef.current.contains(event.target as Node)) {
+        setModelDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [modelDropdownOpen]);
+
+  useEffect(() => {
+    if (modelsDisabled) {
+      setModelDropdownOpen(false);
+    }
+  }, [modelsDisabled]);
+
   const applyBasicFilters = async () => {
     try {
       setLoading(true);
       setError(null);
       const params: Record<string, any> = { per_page: 12, sort: '-created_at' };
-      if (markaId) params.marka_id = Number(markaId);
-      if (modelId) params.model_id = Number(modelId);
+      if (selectedBrands.length === 1) {
+        params.marka_id = selectedBrands[0];
+      } else if (selectedBrands.length > 1) {
+        params.marka_ids = selectedBrands;
+      }
+      if (selectedModels.length === 1) {
+        params.model_id = selectedModels[0];
+      } else if (selectedModels.length > 1) {
+        params.model_ids = selectedModels;
+      }
       if (cenaMin) params.cena_min = Number(cenaMin);
       if (cenaMax) params.cena_max = Number(cenaMax);
       if (rokMin) params.rok_min = Number(rokMin);
@@ -166,24 +272,127 @@ const Home: React.FC = () => {
             </div>
 
             <div className="basic-filters">
-              <label>
-                Marka
-                <select name="marka" value={markaId} onChange={(e) => setMarkaId(e.target.value)}>
-                  <option value="">Wszystkie</option>
-                  {brands.map(b => (
-                    <option key={b.id} value={b.id}>{b.nazwa}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Model
-                <select name="model" value={modelId} onChange={(e) => setModelId(e.target.value)} disabled={!markaId}>
-                  <option value="">Wszystkie</option>
-                  {models.map(m => (
-                    <option key={m.id} value={m.id}>{m.nazwa}</option>
-                  ))}
-                </select>
-              </label>
+              {dropdownOverlayActive && (
+                <div
+                  className="dropdown-overlay"
+                  onClick={() => {
+                    setBrandDropdownOpen(false);
+                    setModelDropdownOpen(false);
+                  }}
+                />
+              )}
+              <div className="filter-field multi-select-field" ref={brandDropdownRef}>
+                <span className="filter-label">Marki</span>
+                <div className={`multi-select ${brandDropdownOpen ? 'is-open' : ''}`}>
+                  <button
+                    type="button"
+                    className="multi-select-trigger"
+                    onClick={() => setBrandDropdownOpen((prev) => !prev)}
+                    aria-haspopup="listbox"
+                    aria-expanded={brandDropdownOpen}
+                    aria-controls="brand-multi-select"
+                  >
+                    <span className="multi-select-summary">{brandSummary}</span>
+                    {selectedBrands.length > 0 && (
+                      <span className="selection-count">{selectedBrands.length}</span>
+                    )}
+                    <span className="multi-select-chevron">▾</span>
+                  </button>
+                  {brandDropdownOpen && (
+                    <div className="multi-select-dropdown" id="brand-multi-select" role="listbox" aria-multiselectable="true">
+                      {brands.length ? (
+                        <>
+                          <div className="multi-select-actions">
+                            <button type="button" onClick={() => setSelectedBrands([])}>Wyczyść</button>
+                          </div>
+                          <ul className="multi-select-options">
+                            {brands.map((brand) => (
+                              <li key={brand.id}>
+                                <label
+                                  className={`multi-select-option ${selectedBrands.includes(brand.id) ? 'is-checked' : ''}`}
+                                >
+                                  <span className="option-text">
+                                    <span className="option-name">{brand.nazwa}</span>
+                                    <span className="option-count">({brand.ogloszenia_count ?? 0})</span>
+                                  </span>
+                                  <span className="option-switch">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedBrands.includes(brand.id)}
+                                      onChange={() => toggleBrand(brand.id)}
+                                      className="switch-input"
+                                    />
+                                    <span className="switch-visual" aria-hidden="true" />
+                                  </span>
+                                </label>
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      ) : (
+                        <p className="multi-select-empty">Brak marek do wyświetlenia.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="filter-field multi-select-field" ref={modelDropdownRef}>
+                <span className="filter-label">Modele</span>
+                <div className={`multi-select ${modelDropdownOpen ? 'is-open' : ''} ${modelsDisabled ? 'disabled' : ''}`}>
+                  <button
+                    type="button"
+                    className="multi-select-trigger"
+                    onClick={() => setModelDropdownOpen((prev) => !prev)}
+                    aria-haspopup="listbox"
+                    aria-expanded={modelDropdownOpen}
+                    aria-controls="model-multi-select"
+                    disabled={modelsDisabled}
+                  >
+                    <span className="multi-select-summary">{modelSummary}</span>
+                    {selectedModels.length > 0 && !modelsDisabled && (
+                      <span className="selection-count">{selectedModels.length}</span>
+                    )}
+                    <span className="multi-select-chevron">▾</span>
+                  </button>
+                  {!modelsDisabled && modelDropdownOpen && (
+                    <div className="multi-select-dropdown" id="model-multi-select" role="listbox" aria-multiselectable="true">
+                      {models.length ? (
+                        <>
+                          <div className="multi-select-actions">
+                            <button type="button" onClick={() => setSelectedModels([])}>Wyczyść</button>
+                          </div>
+                          <ul className="multi-select-options">
+                            {models.map((model) => (
+                              <li key={model.id}>
+                                <label
+                                  className={`multi-select-option ${selectedModels.includes(model.id) ? 'is-checked' : ''}`}
+                                >
+                                  <span className="option-text">
+                                    <span className="option-name">{model.nazwa}</span>
+                                    <span className="option-count">({model.ogloszenia_count ?? 0})</span>
+                                  </span>
+                                  <span className="option-switch">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedModels.includes(model.id)}
+                                      onChange={() => toggleModel(model.id)}
+                                      className="switch-input"
+                                    />
+                                    <span className="switch-visual" aria-hidden="true" />
+                                  </span>
+                                </label>
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      ) : (
+                        <p className="multi-select-empty">Brak modeli dla wybranej marki.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
               <label>
                 Cena od
                 <input type="number" min="0" step="1000" value={cenaMin} onChange={(e) => setCenaMin(e.target.value)} />

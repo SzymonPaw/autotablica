@@ -15,6 +15,7 @@ class ModelPojazduResource extends JsonResource
             'id' => $this->id,
             'marka_id' => $this->marka_id,
             'nazwa' => $this->nazwa,
+            'ogloszenia_count' => (int) ($this->ogloszenia_count ?? 0),
         ];
     }
 }

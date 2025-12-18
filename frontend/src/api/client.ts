@@ -106,9 +106,25 @@ export async function fetchListings(params?: Record<string, any>): Promise<Pagin
   const searchParams = new URLSearchParams();
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
-      if (value != null) {
-        searchParams.append(key, String(value));
+      if (value == null) {
+        return;
       }
+
+      if (Array.isArray(value)) {
+        if (value.length === 0) {
+          return;
+        }
+
+        const paramKey = key.endsWith('[]') ? key : `${key}[]`;
+        value.forEach((entry) => {
+          if (entry != null) {
+            searchParams.append(paramKey, String(entry));
+          }
+        });
+        return;
+      }
+
+      searchParams.append(key, String(value));
     });
   }
 
@@ -295,8 +311,8 @@ export async function uploadListingPhotos(listingId: number | string, files: Fil
 }
 
 // Słowniki
-export interface MarkaDto { id: number; nazwa: string }
-export interface ModelDto { id: number; marka_id: number; nazwa: string }
+export interface MarkaDto { id: number; nazwa: string; ogloszenia_count?: number }
+export interface ModelDto { id: number; marka_id: number; nazwa: string; ogloszenia_count?: number }
 
 function normalizeDictionaryResponse<T>(payload: any): T[] {
   const data = (payload?.data ?? payload);
