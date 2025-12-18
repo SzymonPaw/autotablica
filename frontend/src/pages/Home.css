@@ -328,3 +328,120 @@
   font-size: 1.25rem;
   color: #666;
 }
+
+.brand-page-header {
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.brand-page-title {
+  flex: 1;
+  min-width: 220px;
+}
+
+.brand-page-title h2 {
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.brand-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  color: #7f8c8d;
+}
+
+.brand-description {
+  margin: 0;
+  color: #4b5563;
+}
+
+.brand-page-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.brand-page-actions a {
+  color: #3498db;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.brand-page-actions a:hover {
+  text-decoration: underline;
+}
+
+.brand-model-switcher {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.switcher-label {
+  font-size: 0.85rem;
+  color: #7f8c8d;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.switcher-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.model-chip {
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  text-decoration: none;
+  font-size: 0.9rem;
+  color: #374151;
+  transition: all 0.2s ease;
+}
+
+.model-chip:hover {
+  border-color: #3498db;
+  color: #3498db;
+}
+
+.model-chip.active {
+  background: #3498db;
+  border-color: #3498db;
+  color: #fff;
+}
+
+.brand-page-footer {
+  margin-top: 2rem;
+  text-align: right;
+}
+
+.brand-page-footer .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-directory {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.brand-placeholder {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.brand-placeholder.error {
+  color: #c0392b;
+}
+
+.brand-placeholder p {
+  margin: 0;
+}

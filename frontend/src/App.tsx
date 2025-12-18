@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import AllListings from './pages/AllListings';
 // Product page replaces the older Detail view — kept Detail.tsx for quick reference
 import ProductPage from './pages/ProductPage';
+import BrandListings from './pages/BrandListings';
 import Profile from './pages/Profile';
 import MyListings from './pages/MyListings';
 import Favorites from './pages/Favorites';
@@ -42,8 +43,11 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-    <Route path="/ogloszenia" element={<AllListings />} />
-  <Route path="/ogloszenie/:id" element={<ProductPage />} />
+      <Route path="/ogloszenia" element={<AllListings />} />
+      <Route path="/ogloszenie/:id" element={<ProductPage />} />
+      <Route path="/marka" element={<BrandListings />} />
+      <Route path="/marka/:brandSlug" element={<BrandListings />} />
+      <Route path="/marka/:brandSlug/:modelSlug" element={<BrandListings />} />
       <Route 
         path="/profil" 
         element={
