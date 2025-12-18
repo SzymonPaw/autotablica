@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css';
 import Listing from '../components/Listing';
@@ -48,8 +48,11 @@ const Home: React.FC = () => {
   const [popularStats, setPopularStats] = useState<PopularStatsResponse | null>(null);
   const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const [brandSearch, setBrandSearch] = useState('');
+  const [modelSearch, setModelSearch] = useState('');
   const brandDropdownRef = useRef<HTMLDivElement | null>(null);
   const modelDropdownRef = useRef<HTMLDivElement | null>(null);
+  const filtersInitializedRef = useRef(false);
   const dropdownOverlayActive = brandDropdownOpen || modelDropdownOpen;
 
   // Pobierz 12 najnowszych ogłoszeń do sekcji promowane
@@ -142,6 +145,19 @@ const Home: React.FC = () => {
 
   const modelsDisabled = selectedBrands.length !== 1;
 
+  const filteredBrands = useMemo(() => {
+    const query = brandSearch.trim().toLowerCase();
+    if (!query) return brands;
+    return brands.filter((brand) => brand.nazwa.toLowerCase().includes(query));
+  }, [brandSearch, brands]);
+
+  const filteredModels = useMemo(() => {
+    if (!models.length) return [];
+    const query = modelSearch.trim().toLowerCase();
+    if (!query) return models;
+    return models.filter((model) => model.nazwa.toLowerCase().includes(query));
+  }, [modelSearch, models]);
+
   const toggleBrand = (brandId: number) => {
     setSelectedBrands(prev =>
       prev.includes(brandId)
@@ -193,7 +209,7 @@ const Home: React.FC = () => {
 
   const modelSummary = useMemo(() => {
     if (modelsDisabled) {
-      return 'Wybierz markę najpierw';
+      return 'Wybierz jedną markę';
     }
     return formatSummary(selectedModels, models, 'Wszystkie modele', (count) => `${count} modeli`);
   }, [selectedModels, models, modelsDisabled]);
@@ -229,10 +245,23 @@ const Home: React.FC = () => {
   useEffect(() => {
     if (modelsDisabled) {
       setModelDropdownOpen(false);
+      setModelSearch('');
     }
   }, [modelsDisabled]);
 
-  const applyBasicFilters = async () => {
+  useEffect(() => {
+    if (!brandDropdownOpen) {
+      setBrandSearch('');
+    }
+  }, [brandDropdownOpen]);
+
+  useEffect(() => {
+    if (!modelDropdownOpen) {
+      setModelSearch('');
+    }
+  }, [modelDropdownOpen]);
+
+  const applyBasicFilters = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -260,6 +289,32 @@ const Home: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  }, [selectedBrands, selectedModels, cenaMin, cenaMax, rokMin, rokMax]);
+
+  useEffect(() => {
+    if (!filtersInitializedRef.current) {
+      filtersInitializedRef.current = true;
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      applyBasicFilters();
+    }, 450);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [applyBasicFilters]);
+
+  const resetFilters = () => {
+    setSelectedBrands([]);
+    setSelectedModels([]);
+    setCenaMin('');
+    setCenaMax('');
+    setRokMin('');
+    setRokMax('');
+    setBrandSearch('');
+    setModelSearch('');
+    setBrandDropdownOpen(false);
+    setModelDropdownOpen(false);
   };
 
   return (
@@ -302,32 +357,46 @@ const Home: React.FC = () => {
                     <div className="multi-select-dropdown" id="brand-multi-select" role="listbox" aria-multiselectable="true">
                       {brands.length ? (
                         <>
-                          <div className="multi-select-actions">
-                            <button type="button" onClick={() => setSelectedBrands([])}>Wyczyść</button>
+                          <div className="multi-select-header">
+                            <div className="multi-select-search">
+                              <input
+                                type="text"
+                                placeholder="Szukaj marki..."
+                                value={brandSearch}
+                                onChange={(event) => setBrandSearch(event.target.value)}
+                                aria-label="Szukaj marki"
+                                autoFocus
+                              />
+                            </div>
+                            <button type="button" onClick={() => setSelectedBrands([])}>Wyczyść wybór</button>
                           </div>
-                          <ul className="multi-select-options">
-                            {brands.map((brand) => (
-                              <li key={brand.id}>
-                                <label
-                                  className={`multi-select-option ${selectedBrands.includes(brand.id) ? 'is-checked' : ''}`}
-                                >
-                                  <span className="option-text">
-                                    <span className="option-name">{brand.nazwa}</span>
-                                    <span className="option-count">({brand.ogloszenia_count ?? 0})</span>
-                                  </span>
-                                  <span className="option-switch">
-                                    <input
-                                      type="checkbox"
-                                      checked={selectedBrands.includes(brand.id)}
-                                      onChange={() => toggleBrand(brand.id)}
-                                      className="switch-input"
-                                    />
-                                    <span className="switch-visual" aria-hidden="true" />
-                                  </span>
-                                </label>
-                              </li>
-                            ))}
-                          </ul>
+                          {filteredBrands.length ? (
+                            <ul className="multi-select-options">
+                              {filteredBrands.map((brand) => (
+                                <li key={brand.id}>
+                                  <label
+                                    className={`multi-select-option ${selectedBrands.includes(brand.id) ? 'is-checked' : ''}`}
+                                  >
+                                    <span className="option-text">
+                                      <span className="option-name">{brand.nazwa}</span>
+                                      <span className="option-count">({brand.ogloszenia_count ?? 0})</span>
+                                    </span>
+                                    <span className="option-switch">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedBrands.includes(brand.id)}
+                                        onChange={() => toggleBrand(brand.id)}
+                                        className="switch-input"
+                                      />
+                                      <span className="switch-visual" aria-hidden="true" />
+                                    </span>
+                                  </label>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="multi-select-empty">Brak marek spełniających kryteria.</p>
+                          )}
                         </>
                       ) : (
                         <p className="multi-select-empty">Brak marek do wyświetlenia.</p>
@@ -359,32 +428,46 @@ const Home: React.FC = () => {
                     <div className="multi-select-dropdown" id="model-multi-select" role="listbox" aria-multiselectable="true">
                       {models.length ? (
                         <>
-                          <div className="multi-select-actions">
-                            <button type="button" onClick={() => setSelectedModels([])}>Wyczyść</button>
+                          <div className="multi-select-header">
+                            <div className="multi-select-search">
+                              <input
+                                type="text"
+                                placeholder="Szukaj modelu..."
+                                value={modelSearch}
+                                onChange={(event) => setModelSearch(event.target.value)}
+                                aria-label="Szukaj modelu"
+                                autoFocus
+                              />
+                            </div>
+                            <button type="button" onClick={() => setSelectedModels([])}>Wyczyść wybór</button>
                           </div>
-                          <ul className="multi-select-options">
-                            {models.map((model) => (
-                              <li key={model.id}>
-                                <label
-                                  className={`multi-select-option ${selectedModels.includes(model.id) ? 'is-checked' : ''}`}
-                                >
-                                  <span className="option-text">
-                                    <span className="option-name">{model.nazwa}</span>
-                                    <span className="option-count">({model.ogloszenia_count ?? 0})</span>
-                                  </span>
-                                  <span className="option-switch">
-                                    <input
-                                      type="checkbox"
-                                      checked={selectedModels.includes(model.id)}
-                                      onChange={() => toggleModel(model.id)}
-                                      className="switch-input"
-                                    />
-                                    <span className="switch-visual" aria-hidden="true" />
-                                  </span>
-                                </label>
-                              </li>
-                            ))}
-                          </ul>
+                          {filteredModels.length ? (
+                            <ul className="multi-select-options">
+                              {filteredModels.map((model) => (
+                                <li key={model.id}>
+                                  <label
+                                    className={`multi-select-option ${selectedModels.includes(model.id) ? 'is-checked' : ''}`}
+                                  >
+                                    <span className="option-text">
+                                      <span className="option-name">{model.nazwa}</span>
+                                      <span className="option-count">({model.ogloszenia_count ?? 0})</span>
+                                    </span>
+                                    <span className="option-switch">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedModels.includes(model.id)}
+                                        onChange={() => toggleModel(model.id)}
+                                        className="switch-input"
+                                      />
+                                      <span className="switch-visual" aria-hidden="true" />
+                                    </span>
+                                  </label>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="multi-select-empty">Brak modeli spełniających kryteria.</p>
+                          )}
                         </>
                       ) : (
                         <p className="multi-select-empty">Brak modeli dla wybranej marki.</p>
@@ -410,9 +493,16 @@ const Home: React.FC = () => {
                 <input type="number" min="1900" max={new Date().getFullYear()} value={rokMax} onChange={(e) => setRokMax(e.target.value)} />
               </label>
               <div className="actions">
-                <button className="btn-primary" type="button" onClick={applyBasicFilters}>Filtruj</button>
+                <button className="btn-ghost" type="button" onClick={resetFilters}>Wyczyść</button>
+                <button className="btn-primary" type="button" onClick={() => applyBasicFilters()}>Filtruj</button>
                 <Link to="/ogloszenia" className="btn-secondary">Pokaż wszystkie filtry</Link>
               </div>
+              {loading && (
+                <div className="filters-loader" aria-live="polite">
+                  <span className="filters-loader__spinner" aria-hidden="true" />
+                  <span>Aktualizuję wyniki...</span>
+                </div>
+              )}
             </div>
 
             <Listing
