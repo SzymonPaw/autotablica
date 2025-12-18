@@ -313,3 +313,27 @@ export async function fetchModels(markaId?: number | string): Promise<ModelDto[]
   const res = await apiRequest<ModelDto[]>(`/slowniki/modele${qs}`);
   return normalizeDictionaryResponse<ModelDto>(res.data);
 }
+
+export interface PopularBrandStat {
+  id: number;
+  nazwa: string;
+  listings_count: number;
+}
+
+export interface PopularModelStat {
+  id: number;
+  nazwa: string;
+  marka_id: number;
+  marka_nazwa: string;
+  listings_count: number;
+}
+
+export interface PopularStatsResponse {
+  brands: PopularBrandStat[];
+  models: PopularModelStat[];
+}
+
+export async function fetchPopularStats(): Promise<PopularStatsResponse> {
+  const res = await apiRequest<PopularStatsResponse>(`/statystyki/popularne`);
+  return res.data;
+}

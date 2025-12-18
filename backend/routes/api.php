@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OgloszenieController;
 use App\Http\Controllers\Api\SlownikController;
 use App\Http\Controllers\Api\SzkicOgloszeniaController;
+use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Api\UlubioneController;
 use App\Http\Controllers\Api\ZdjecieController;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,10 @@ Route::get('ogloszenia/{ogloszenie}', [OgloszenieController::class, 'show'])
 Route::prefix('slowniki')->group(function (): void {
     Route::get('marki', [SlownikController::class, 'marki']);
     Route::get('modele', [SlownikController::class, 'modele']);
+});
+
+Route::prefix('statystyki')->group(function (): void {
+    Route::get('popularne', [StatsController::class, 'popular']);
 });
 
 // Tymczasowo: zezwól na dodawanie ogłoszeń bez logowania

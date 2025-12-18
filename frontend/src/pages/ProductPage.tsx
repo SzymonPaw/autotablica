@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import '../App.css';
 import { fetchListingById, fetchListings } from '../api/client';
 import { cleanTitle, titleFromBrandModel } from '../utils/title';
+import { toSlug } from '../utils/slug';
 import { formatMileage, formatPowerKMkW, formatEngineCapacity, mapFuel, mapGearbox, mapDrive, formatDatePL, formatPrice, formatBoolean } from '../utils/format';
 import FavoriteButton from '../components/FavoriteButton';
 import VerifiedBadge from '../components/VerifiedBadge';
@@ -65,6 +66,11 @@ type ListingLite = {
   created_at?: string;
   zdjecia?: Zdjecie[];
   historia_pojazdu?: HistoriaPojazduSummary | null;
+};
+
+type BreadcrumbItem = {
+  label: string;
+  url?: string | null;
 };
 
 type HistoriaStatus = 'pending' | 'success' | 'failed' | 'skipped' | string;
@@ -667,17 +673,56 @@ const ProductPage: React.FC = () => {
     return photos.length ? photos[0]?.url ?? null : null;
   };
 
+  const breadcrumbs = useMemo<BreadcrumbItem[]>(() => {
+    const items: BreadcrumbItem[] = [{ label: 'Strona główna', url: '/' }];
+
+    if (item?.marka?.nazwa) {
+      const brandSlug = toSlug(item.marka.nazwa);
+      items.push({
+        label: item.marka.nazwa,
+        url: brandSlug ? `/marka/${brandSlug}` : null,
+      });
+
+      if (item.model?.nazwa) {
+        const modelSlug = toSlug(item.model.nazwa);
+        items.push({
+          label: item.model.nazwa,
+          url: brandSlug && modelSlug ? `/marka/${brandSlug}/${modelSlug}` : null,
+        });
+      }
+    }
+
+    items.push({ label: 'Ogłoszenie' });
+
+    return items;
+  }, [item?.marka?.nazwa, item?.model?.nazwa]);
+
   if (loading) return <LoadingScreen />;
   if (error) return <p className="feedback error">{error}</p>;
   if (!item) return <p className="empty">Brak ogłoszenia.</p>;
 
   return (
     <div className="product-page-wrapper">
-      <div style={{marginTop: '12px', marginBottom: '0.75rem'}}>
-        <Link to="/" className="back-link">
-          ← Wróć na stronę główną
-        </Link>
-      </div>
+      <nav className="breadcrumbs" aria-label="Ścieżka okruszków">
+        <ol>
+          {breadcrumbs.map((crumb, index) => {
+            const isLast = index === breadcrumbs.length - 1;
+            const key = `${crumb.label}-${index}`;
+            if (crumb.url && !isLast) {
+              return (
+                <li key={key}>
+                  <Link to={crumb.url}>{crumb.label}</Link>
+                </li>
+              );
+            }
+            return (
+              <li key={key}>
+                <span>{crumb.label}</span>
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
       <article className="ogloszenie-detail">
       <div className="detail-grid">
         <div className="gallery">

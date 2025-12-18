@@ -1,8 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css';
 import Listing from '../components/Listing';
-import { fetchListings, fetchBrands, fetchModels, MarkaDto, ModelDto } from '../api/client';
+import {
+  fetchListings,
+  fetchBrands,
+  fetchModels,
+  fetchPopularStats,
+  MarkaDto,
+  ModelDto,
+  PopularStatsResponse,
+} from '../api/client';
+import { toSlug } from '../utils/slug';
 
 interface Ogloszenie {
   id: number;
@@ -36,6 +45,7 @@ const Home: React.FC = () => {
   const [cenaMax, setCenaMax] = useState<string>('');
   const [rokMin, setRokMin] = useState<string>('');
   const [rokMax, setRokMax] = useState<string>('');
+  const [popularStats, setPopularStats] = useState<PopularStatsResponse | null>(null);
 
   // Pobierz 12 najnowszych ogłoszeń do sekcji promowane
   useEffect(() => {
@@ -90,6 +100,39 @@ const Home: React.FC = () => {
     })();
     return () => { mounted = false; };
   }, [markaId]);
+
+  useEffect(() => {
+    let mounted = true;
+    fetchPopularStats()
+      .then((data) => {
+        if (!mounted) return;
+        setPopularStats(data);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setPopularStats({ brands: [], models: [] });
+      });
+    return () => { mounted = false; };
+  }, []);
+
+  const brandColumns = useMemo(() => {
+    if (!popularStats) return [];
+    return Array.from({ length: 2 }, (_, idx) =>
+      popularStats.brands.slice(idx * 5, idx * 5 + 5)
+    );
+  }, [popularStats]);
+
+  const modelColumns = useMemo(() => {
+    if (!popularStats) return [];
+    return Array.from({ length: 2 }, (_, idx) =>
+      popularStats.models.slice(idx * 5, idx * 5 + 5)
+    );
+  }, [popularStats]);
+
+  const hasPopularData = useMemo(() => {
+    if (!popularStats) return false;
+    return (popularStats.brands?.length ?? 0) > 0 || (popularStats.models?.length ?? 0) > 0;
+  }, [popularStats]);
 
   const applyBasicFilters = async () => {
     try {
@@ -175,6 +218,60 @@ const Home: React.FC = () => {
             </div>
           </div>
         </section>
+
+        {popularStats && (
+          <section className="popular-section">
+            <div className="popular-inner">
+              <div className="popular-header">
+                <h3>Najpopularniejsze marki i modele</h3>
+                <p>Zobacz, które ogłoszenia cieszą się obecnie największym zainteresowaniem.</p>
+              </div>
+              {hasPopularData ? (
+                <div className="popular-grid">
+                  {brandColumns.map((column, idx) => (
+                    <div key={`brand-col-${idx}`} className="popular-column">
+                      <p className="column-label">Marki</p>
+                      <ul>
+                        {column.map((item) => {
+                          const slug = toSlug(item.nazwa);
+                          return (
+                            <li key={item.id}>
+                              <Link to={`/marka/${slug}`}>{item.nazwa}</Link>
+                              <span className="popular-count">({item.listings_count})</span>
+                            </li>
+                          );
+                        })}
+                        {!column.length && <li className="placeholder">Brak danych</li>}
+                      </ul>
+                    </div>
+                  ))}
+                  {modelColumns.map((column, idx) => (
+                    <div key={`model-col-${idx}`} className="popular-column">
+                      <p className="column-label">Modele</p>
+                      <ul>
+                        {column.map((item) => {
+                          const brandSlug = toSlug(item.marka_nazwa);
+                          const modelSlug = toSlug(item.nazwa);
+                          return (
+                            <li key={item.id}>
+                              <Link to={`/marka/${brandSlug}/${modelSlug}`}>
+                                {item.marka_nazwa} {item.nazwa}
+                              </Link>
+                              <span className="popular-count">({item.listings_count})</span>
+                            </li>
+                          );
+                        })}
+                        {!column.length && <li className="placeholder">Brak danych</li>}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="popular-empty">Brak aktualnych danych o popularności.</p>
+              )}
+            </div>
+          </section>
+        )}
       </main>
     </div>
   );

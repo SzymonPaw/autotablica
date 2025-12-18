@@ -106,9 +106,14 @@ const Listing: React.FC<Props> = ({ items, loading, error, showGalleryControls =
   if (error) return <p className="feedback error">{error}</p>;
   if (!items || items.length === 0) return <p className="empty">Brak ogłoszeń do wyświetlenia.</p>;
 
+  const listClasses = ['ogloszenia-list'];
+  if (items.length === 1) {
+    listClasses.push('single-card');
+  }
+
   return (
     <>
-    <ul className="ogloszenia-list">
+    <ul className={listClasses.join(' ')}>
       {items.map((item) => {
         const photos = Array.isArray(item.zdjecia)
           ? item.zdjecia.filter((photo) => Boolean(photo?.url))

@@ -50,8 +50,21 @@ const BrandListings: React.FC = () => {
   const [listings, setListings] = useState<ListingItem[]>([]);
   const [models, setModels] = useState<ModelDto[]>([]);
   const [brandDictionary, setBrandDictionary] = useState<MarkaDto[]>([]);
+  const [brandDirectoryExpanded, setBrandDirectoryExpanded] = useState<boolean>(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return window.sessionStorage.getItem('brandDirectoryExpanded') === '1';
+  });
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    window.sessionStorage.setItem('brandDirectoryExpanded', brandDirectoryExpanded ? '1' : '0');
+  }, [brandDirectoryExpanded]);
 
   useEffect(() => {
     let mounted = true;
@@ -221,18 +234,34 @@ const BrandListings: React.FC = () => {
             </div>
 
             {brandLinks.length > 0 && (
-              <div className="brand-directory">
-                <span className="switcher-label">Marki</span>
-                <div className="switcher-list">
-                  {brandLinks.map((link) => (
-                    <Link
-                      key={link.url}
-                      to={link.url}
-                      className={`model-chip${link.active ? ' active' : ''}`}
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
+              <div className={`brand-directory${brandDirectoryExpanded ? ' expanded' : ''}`}>
+                <div className="brand-directory-header">
+                  <span className="switcher-label">Marki</span>
+                  <button
+                    type="button"
+                    className="brand-directory-toggle"
+                    onClick={() => setBrandDirectoryExpanded((prev) => !prev)}
+                    aria-expanded={brandDirectoryExpanded}
+                    aria-controls="brand-directory-list"
+                  >
+                    {brandDirectoryExpanded ? 'Ukryj marki' : 'Pokaż wszystkie marki'}
+                  </button>
+                </div>
+                <div
+                  id="brand-directory-list"
+                  className="switcher-list"
+                  aria-hidden={!brandDirectoryExpanded}
+                >
+                  {brandDirectoryExpanded &&
+                    brandLinks.map((link) => (
+                      <Link
+                        key={link.url}
+                        to={link.url}
+                        className={`model-chip${link.active ? ' active' : ''}`}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
                 </div>
               </div>
             )}

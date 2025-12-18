@@ -7,6 +7,23 @@
   margin: 0;
 }
 
+.ogloszenia-list.single-card {
+  width: 100%;
+  max-width: min(50%, 960px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ogloszenia-list.single-card .ogloszenie-item {
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .ogloszenia-list.single-card {
+    max-width: 100%;
+  }
+}
+
 .ogloszenie-item {
   background: #fff;
   border: 1px solid #e1e8ed;
