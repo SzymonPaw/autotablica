@@ -46,9 +46,7 @@ const Favorites: React.FC = () => {
   const handleRemoveFromFavorites = async (id: number) => {
     try {
       await removeFavorite(id);
-      setFavorites(prevFavorites =>
-        prevFavorites.filter(favorite => favorite.id !== id)
-      );
+      setFavorites(prevFavorites => prevFavorites.filter(favorite => favorite.id !== id));
     } catch (err) {
       setError('Nie udało się usunąć ogłoszenia z ulubionych');
     }
@@ -60,64 +58,66 @@ const Favorites: React.FC = () => {
 
   return (
     <div className="favorites-page">
-      <h1>Ulubione ogłoszenia</h1>
+      <div className="favorites-card">
+        <h1>Ulubione ogłoszenia</h1>
 
-      {error && <div className="error-message">{error}</div>}
+        {error && <div className="error-message">{error}</div>}
 
-      {favorites.length === 0 ? (
-        <div className="empty-state">
-          <p>Nie masz jeszcze żadnych ulubionych ogłoszeń</p>
-          <Link to="/" className="btn-primary">
-            Przeglądaj ogłoszenia
-          </Link>
-        </div>
-      ) : (
-        <div className="favorites-grid">
-          {favorites.map(listing => (
-            <div key={listing.id} className="favorite-card">
-              <Link to={`/ogloszenie/${listing.id}`} className="favorite-image">
-                {listing.zdjecia[0] ? (
-                  <img src={listing.zdjecia[0].url} alt={listing.tytul} />
-                ) : (
-                  <div className="no-image">Brak zdjęcia</div>
-                )}
-              </Link>
-              
-              <div className="favorite-content">
-                <div className="favorite-title-row">
-                  <Link to={`/ogloszenie/${listing.id}`} className="favorite-title">
-                    <h3>{listing.tytul}</h3>
-                  </Link>
-                  {isHistoryVerified(listing.historia_pojazdu) && (
-                    <VerifiedBadge title={verifiedHistoryTitle} />
+        {favorites.length === 0 ? (
+          <div className="empty-state">
+            <p>Nie masz jeszcze żadnych ulubionych ogłoszeń</p>
+            <Link to="/" className="btn-primary">
+              Przeglądaj ogłoszenia
+            </Link>
+          </div>
+        ) : (
+          <div className="favorites-grid">
+            {favorites.map(listing => (
+              <div key={listing.id} className="favorite-card">
+                <Link to={`/ogloszenie/${listing.id}`} className="favorite-image">
+                  {listing.zdjecia[0] ? (
+                    <img src={listing.zdjecia[0].url} alt={listing.tytul} />
+                  ) : (
+                    <div className="no-image">Brak zdjęcia</div>
                   )}
-                </div>
-                <p className="favorite-price">{listing.cena.toLocaleString('pl-PL')} zł</p>
-                {listing.user?.name && (
-                  <p className="favorite-seller">
-                    Sprzedający: {listing.user.name}
-                  </p>
-                )}
-                <p className="favorite-date">
-                  Dodano: {new Date(listing.created_at).toLocaleDateString('pl-PL')}
-                </p>
-              </div>
-
-              <div className="favorite-actions">
-                <Link to={`/ogloszenie/${listing.id}`} className="btn-secondary">
-                  Zobacz szczegóły
                 </Link>
-                <button 
-                  onClick={() => handleRemoveFromFavorites(listing.id)}
-                  className="btn-danger"
-                >
-                  Usuń z ulubionych
-                </button>
+
+                <div className="favorite-content">
+                  <div className="favorite-title-row">
+                    <Link to={`/ogloszenie/${listing.id}`} className="favorite-title">
+                      <h3>{listing.tytul}</h3>
+                    </Link>
+                    {isHistoryVerified(listing.historia_pojazdu) && (
+                      <VerifiedBadge title={verifiedHistoryTitle} />
+                    )}
+                  </div>
+                  <p className="favorite-price">{listing.cena.toLocaleString('pl-PL')} zł</p>
+                  {listing.user?.name && (
+                    <p className="favorite-seller">
+                      Sprzedający: {listing.user.name}
+                    </p>
+                  )}
+                  <p className="favorite-date">
+                    Dodano: {new Date(listing.created_at).toLocaleDateString('pl-PL')}
+                  </p>
+                </div>
+
+                <div className="favorite-actions">
+                  <Link to={`/ogloszenie/${listing.id}`} className="btn-secondary">
+                    Zobacz szczegóły
+                  </Link>
+                  <button
+                    onClick={() => handleRemoveFromFavorites(listing.id)}
+                    className="btn-danger"
+                  >
+                    Usuń z ulubionych
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

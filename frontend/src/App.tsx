@@ -99,7 +99,18 @@ const AppRoutes: React.FC = () => {
 };
 
 const App: React.FC = () => {
-  const containerClasses = ['container', 'home-full'];
+  const location = useLocation();
+  const isHomeRoute = location.pathname === '/';
+
+  const containerClasses = ['container'];
+  if (isHomeRoute) {
+    containerClasses.push('home-full');
+  }
+
+  const shellClasses = ['page-shell'];
+  if (isHomeRoute) {
+    shellClasses.push('page-shell--full');
+  }
 
   return (
     <AuthProvider>
@@ -107,7 +118,9 @@ const App: React.FC = () => {
         <div className="AppRoot">
           <NavBar />
           <main className={containerClasses.join(' ')}>
-            <AppRoutes />
+            <div className={shellClasses.join(' ')}>
+              <AppRoutes />
+            </div>
           </main>
           <Footer />
         </div>
