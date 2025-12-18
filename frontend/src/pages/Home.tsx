@@ -193,7 +193,7 @@ const Home: React.FC = () => {
 
   const modelSummary = useMemo(() => {
     if (modelsDisabled) {
-      return 'Wybierz jedną markę';
+      return 'Wybierz markę najpierw';
     }
     return formatSummary(selectedModels, models, 'Wszystkie modele', (count) => `${count} modeli`);
   }, [selectedModels, models, modelsDisabled]);
