@@ -2,7 +2,7 @@
 .edit-listing-page {
   width: min(var(--page-shell-max-width), 100%);
   margin: 0 auto;
-  padding: 0 var(--page-shell-padding-inline);
+  padding: 0;
   display: flex;
   justify-content: center;
   box-sizing: border-box;

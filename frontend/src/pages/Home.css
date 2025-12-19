@@ -21,8 +21,9 @@
 /* Upewnij się, że sekcja promowanych wykorzystuje całą szerokość swojej kolumny */
 .listings.promoted {
   width: 100%;
-  max-width: 1320px;
+  max-width: var(--page-shell-max-width);
   margin: 0 auto;
+  padding: 0 !important;
 }
 
 /* Na stronie głównej sekcja promowanych ma zajmować pełną szerokość siatki */
@@ -32,7 +33,7 @@
 
 .listings.promoted .promoted-inner {
   width: 100%;
-  padding: 0 1rem;
+  padding: 1rem 2rem;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -917,7 +918,7 @@ ease;
 .popular-section {
   grid-column: 1 / -1;
   width: 100%;
-  max-width: 1344px;
+  max-width: var(--page-shell-max-width);
   margin: 1rem auto 0;
 }
 

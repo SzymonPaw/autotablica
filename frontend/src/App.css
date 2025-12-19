@@ -1,6 +1,6 @@
 ﻿:root {
 	color-scheme: light;
-	--page-shell-max-width: 1320px;
+	--page-shell-max-width: 1344px;
 	--page-shell-padding-inline: clamp(1rem, 4vw, 3.5rem);
 	--page-shell-padding-top: 32px;
 	--page-shell-padding-bottom: 72px;
@@ -30,7 +30,7 @@ body {
 .AppRoot .container {
 	max-width: none;
 	width: 100%;
-	margin: calc(var(--nav-height, 80px)) 0 0;
+	margin: 55px 0 0;
 	padding: var(--page-shell-padding-top) 0 var(--page-shell-padding-bottom);
 	box-sizing: border-box;
 }
@@ -47,7 +47,7 @@ body {
 .page-shell {
 	width: min(var(--page-shell-max-width), 100%);
 	margin: 0 auto;
-	padding: 0 var(--page-shell-padding-inline) var(--page-shell-padding-bottom);
+	padding: 0;
 	box-sizing: border-box;
 }
 
@@ -340,7 +340,7 @@ button:hover {
 .product-page-wrapper {
 	width: min(var(--page-shell-max-width), 100%);
 	margin: 0 auto;
-	padding: 0 var(--page-shell-padding-inline) var(--page-shell-padding-bottom);
+	padding: 0;
 	box-sizing: border-box;
 }
 

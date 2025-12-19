@@ -19,7 +19,7 @@
 /* Inner container with fixed width */
 .navbar-inner {
   width: 100%;
-  max-width: 1320px;
+  max-width: var(--page-shell-max-width);
   display: flex;
   align-items: center;
   justify-content: space-between;
