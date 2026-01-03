@@ -35,10 +35,6 @@ Route::prefix('statystyki')->group(function (): void {
     Route::get('popularne', [StatsController::class, 'popular']);
 });
 
-// Tymczasowo: zezwól na dodawanie ogłoszeń bez logowania
-Route::post('ogloszenia', [OgloszenieController::class, 'store']);
-Route::post('ogloszenia/{ogloszenie}/zdjecia', [ZdjecieController::class, 'store'])->middleware('throttle:upload-images');
-
 // Szkice ogłoszeń - tymczasowo publiczne
 Route::get('szkice-ogloszen', [SzkicOgloszeniaController::class, 'index']);
 Route::post('szkice-ogloszen', [SzkicOgloszeniaController::class, 'store']);
@@ -47,11 +43,15 @@ Route::patch('szkice-ogloszen/{szkicOgloszenia}', [SzkicOgloszeniaController::cl
 Route::delete('szkice-ogloszen/{szkicOgloszenia}', [SzkicOgloszeniaController::class, 'destroy']);
 
 Route::middleware('auth:sanctum')->group(function (): void {
+    Route::post('ogloszenia', [OgloszenieController::class, 'store']);
     Route::get('ogloszenia/moje', [OgloszenieController::class, 'my']);
     Route::patch('ogloszenia/{ogloszenie}', [OgloszenieController::class, 'update']);
     Route::delete('ogloszenia/{ogloszenie}', [OgloszenieController::class, 'destroy']);
 
-    // Upload zdjęć wymagał logowania — tymczasowo dostępny publicznie (patrz wyżej)
+    Route::post('ogloszenia/{ogloszenie}/zdjecia', [ZdjecieController::class, 'store'])
+        ->middleware('throttle:upload-images');
+
+    // Zarządzanie zdjęciami ogłoszeń wymaga logowania
     Route::delete('zdjecia/{zdjecie}', [ZdjecieController::class, 'destroy']);
 
     Route::get('ulubione', [UlubioneController::class, 'index']);

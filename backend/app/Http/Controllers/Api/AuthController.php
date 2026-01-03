@@ -19,13 +19,14 @@ class AuthController extends Controller
             $validated = $request->validate([
                 'name' => ['required', 'string', 'max:255'],
                 'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+                'phone' => ['required', 'string', 'max:32'],
                 'password' => ['required', 'string', Password::defaults()],
                 'token_name' => ['nullable', 'string', 'max:255'],
                 'abilities' => ['nullable', 'array'],
                 'abilities.*' => ['string', 'max:255'],
             ]);
 
-        $userData = Arr::only($validated, ['name', 'email', 'password']);
+        $userData = Arr::only($validated, ['name', 'email', 'password', 'phone']);
 
         $user = User::create($userData);
 
@@ -37,7 +38,7 @@ class AuthController extends Controller
         return response()->json([
             'token' => $token,
             'token_type' => 'Bearer',
-            'data' => $user,
+            'data' => $this->serializeUser($user),
         ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -73,7 +74,7 @@ class AuthController extends Controller
         return response()->json([
             'token' => $token,
             'token_type' => 'Bearer',
-            'data' => $user,
+            'data' => $this->serializeUser($user),
         ]);
     }
 
@@ -119,6 +120,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => ['sometimes', 'filled', 'string', 'max:255'],
             'email' => ['sometimes', 'filled', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'phone' => ['sometimes', 'nullable', 'string', 'max:32'],
         ]);
 
         $filtered = array_filter($validated, static fn ($value) => $value !== null);
@@ -167,6 +169,7 @@ class AuthController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'phone' => $user->phone,
             'created_at' => $user->created_at?->toIso8601String(),
             'updated_at' => $user->updated_at?->toIso8601String(),
         ];

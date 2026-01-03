@@ -4,6 +4,7 @@ export interface UserProfile {
   id: number;
   name: string;
   email: string;
+  phone?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
   [key: string]: unknown;
@@ -95,11 +96,13 @@ interface LoginPayload {
 
 interface RegisterPayload extends LoginPayload {
   name: string;
+  phone?: string | null;
 }
 
 export interface UpdateProfilePayload {
   name?: string;
   email?: string;
+  phone?: string | null;
   current_password?: string;
   password?: string;
   password_confirmation?: string;

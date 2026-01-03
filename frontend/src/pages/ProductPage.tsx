@@ -8,6 +8,7 @@ import { formatMileage, formatPowerKMkW, formatEngineCapacity, mapFuel, mapGearb
 import FavoriteButton from '../components/FavoriteButton';
 import VerifiedBadge from '../components/VerifiedBadge';
 import LoadingScreen from '../components/common/LoadingScreen';
+import { useAuth } from '../contexts/AuthContext';
 import { HistoriaPojazduSummary, isHistoryVerified, verifiedHistoryTitle } from '../utils/history';
 import {
   Chart as ChartJS,
@@ -29,6 +30,13 @@ interface Zdjecie {
   url?: string | null;
 }
 
+interface SellerInfo {
+  id: number;
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+}
+
 interface OgloszenieDetail {
   id: number;
   tytul: string;
@@ -39,6 +47,7 @@ interface OgloszenieDetail {
   model?: { id: number; nazwa: string } | null;
   zdjecia?: Zdjecie[];
   historia_pojazdu?: HistoriaPojazduResource | null;
+  sprzedawca?: SellerInfo | null;
   [key: string]: any;
 }
 
@@ -357,6 +366,7 @@ const HighlightIcon: React.FC<{ type: HighlightType }> = ({ type }) => {
 
 const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [item, setItem] = useState<OgloszenieDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -492,6 +502,17 @@ const ProductPage: React.FC = () => {
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
   }, [timelineModalOpen]);
+  const ownerId = typeof item?.uzytkownik_id === 'number'
+    ? item.uzytkownik_id
+    : typeof item?.uzytkownik_id === 'string'
+      ? Number(item.uzytkownik_id)
+      : null;
+  const canEditListing = Boolean(user && ownerId != null && user.id === ownerId);
+  const seller = item?.sprzedawca ?? null;
+  const sellerPhoneHref = seller?.phone
+    ? `tel:${seller.phone.replace(/[^+\d]/g, '')}`
+    : null;
+
   const computedTitle = titleFromBrandModel(item?.marka, item?.model, cleanTitle(item?.tytul ?? '')) || 'Ogłoszenie';
   const highlightCards: HighlightData[] = item ? [
     {
@@ -786,12 +807,19 @@ const ProductPage: React.FC = () => {
               <h1>{computedTitle}</h1>
               {historiaVerified && <VerifiedBadge title={verifiedHistoryTitle} />}
             </div>
-            <FavoriteButton
-              listingId={item.id}
-              variant="button"
-              labelAdd="Dodaj do ulubionych"
-              labelRemove="Usuń z ulubionych"
-            />
+            <div className="detail-actions">
+              {canEditListing && (
+                <Link to={`/ogloszenia/${item.id}/edytuj`} className="btn-secondary detail-edit-button">
+                  Edytuj ogłoszenie
+                </Link>
+              )}
+              <FavoriteButton
+                listingId={item.id}
+                variant="button"
+                labelAdd="Dodaj do ulubionych"
+                labelRemove="Usuń z ulubionych"
+              />
+            </div>
           </div>
           <p className="price"><strong>Cena:</strong> {formatPrice(typeof item.cena === 'string' ? Number(item.cena) : item.cena as number)} </p>
 
@@ -802,7 +830,36 @@ const ProductPage: React.FC = () => {
 
           <section className="contact">
             <h3>Kontakt</h3>
-            <p>Kontakt do sprzedawcy pojawi się tutaj (do zaimplementowania).</p>
+            {seller ? (
+              <div className="contact-card">
+                <div className="contact-card__grid">
+                  <div>
+                    <p className="contact-card__label">Sprzedawca</p>
+                    <p className="contact-card__value">{seller.name ?? 'Nieznany użytkownik'}</p>
+                  </div>
+                  <div>
+                    <p className="contact-card__label">Numer telefonu</p>
+                    <p className="contact-card__value contact-card__value--phone">
+                      {seller.phone ?? 'Brak numeru'}
+                    </p>
+                  </div>
+                </div>
+                {seller.phone ? (
+                  <a className="contact-card__cta" href={sellerPhoneHref ?? undefined}>
+                    Zadzwoń: {seller.phone}
+                  </a>
+                ) : (
+                  <p className="contact-card__empty">Sprzedawca nie udostępnił numeru telefonu.</p>
+                )}
+                {!seller.phone && canEditListing && (
+                  <Link className="contact-card__manage" to="/panel-klienta?tab=profile">
+                    Uzupełnij numer w panelu klienta
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <p>Brak danych kontaktowych.</p>
+            )}
           </section>
         </div>
       </div>

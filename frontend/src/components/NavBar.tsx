@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import LoginForm from './auth/LoginForm';
 import RegisterForm from './auth/RegisterForm';
 import './NavBar.css';
-import { REQUIRE_AUTH_EVENT } from '../constants/events';
+import { REQUIRE_AUTH_EVENT, OPEN_REGISTER_EVENT } from '../constants/events';
 
 const NavBar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -17,9 +17,12 @@ const NavBar: React.FC = () => {
 
   useEffect(() => {
     const handleRequireAuth = () => setActiveModal('login');
+    const handleOpenRegister = () => setActiveModal('register');
     window.addEventListener(REQUIRE_AUTH_EVENT, handleRequireAuth as EventListener);
+    window.addEventListener(OPEN_REGISTER_EVENT, handleOpenRegister as EventListener);
     return () => {
       window.removeEventListener(REQUIRE_AUTH_EVENT, handleRequireAuth as EventListener);
+      window.removeEventListener(OPEN_REGISTER_EVENT, handleOpenRegister as EventListener);
     };
   }, []);
 

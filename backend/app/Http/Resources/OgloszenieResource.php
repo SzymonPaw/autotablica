@@ -64,6 +64,14 @@ class OgloszenieResource extends JsonResource
                     'last_error_message' => $this->historiaPojazdu->last_error_message,
                 ];
             }),
+            'sprzedawca' => $this->whenLoaded('uzytkownik', function () {
+                return [
+                    'id' => $this->uzytkownik->id,
+                    'name' => $this->uzytkownik->name,
+                    'email' => $this->uzytkownik->email,
+                    'phone' => $this->uzytkownik->phone,
+                ];
+            }),
         ];
     }
 }

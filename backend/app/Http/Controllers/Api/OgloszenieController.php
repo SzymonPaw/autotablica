@@ -8,9 +8,7 @@ use App\Http\Requests\UpdateOgloszenieRequest;
 use App\Http\Resources\OgloszenieCollection;
 use App\Http\Resources\OgloszenieResource;
 use App\Models\Ogloszenie;
-use App\Models\User;
 use App\Services\HistoriaPojazdu\HistoriaPojazduManager;
-use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -83,6 +81,12 @@ class OgloszenieController extends Controller
             $filters['paliwo'] = $value;
         }
 
+        if ($request->filled('przebieg_min') && is_numeric($request->input('przebieg_min'))) {
+            $value = (int) $request->input('przebieg_min');
+            $query->where('przebieg', '>=', $value);
+            $filters['przebieg_min'] = $value;
+        }
+
         if ($request->filled('przebieg_max') && is_numeric($request->input('przebieg_max'))) {
             $value = (int) $request->input('przebieg_max');
             $query->where('przebieg', '<=', $value);
@@ -99,6 +103,85 @@ class OgloszenieController extends Controller
             $value = (int) $request->input('rok_max');
             $query->whereYear('data_pierwszej_rej', '<=', $value);
             $filters['rok_max'] = $value;
+        }
+
+        if ($request->filled('moc_min') && is_numeric($request->input('moc_min'))) {
+            $value = (int) $request->input('moc_min');
+            $query->where('moc_silnika', '>=', $value);
+            $filters['moc_min'] = $value;
+        }
+
+        if ($request->filled('moc_max') && is_numeric($request->input('moc_max'))) {
+            $value = (int) $request->input('moc_max');
+            $query->where('moc_silnika', '<=', $value);
+            $filters['moc_max'] = $value;
+        }
+
+        if ($request->filled('pojemnosc_min') && is_numeric($request->input('pojemnosc_min'))) {
+            $value = (float) $request->input('pojemnosc_min');
+            $query->where('pojemnosc_silnika', '>=', $value);
+            $filters['pojemnosc_min'] = $value;
+        }
+
+        if ($request->filled('pojemnosc_max') && is_numeric($request->input('pojemnosc_max'))) {
+            $value = (float) $request->input('pojemnosc_max');
+            $query->where('pojemnosc_silnika', '<=', $value);
+            $filters['pojemnosc_max'] = $value;
+        }
+
+        if ($request->filled('skrzynia_biegow')) {
+            $value = trim((string) $request->input('skrzynia_biegow'));
+            if ($value !== '') {
+                $query->where('skrzynia_biegow', $value);
+                $filters['skrzynia_biegow'] = $value;
+            }
+        }
+
+        if ($request->filled('naped')) {
+            $value = trim((string) $request->input('naped'));
+            if ($value !== '') {
+                $query->where('naped', $value);
+                $filters['naped'] = $value;
+            }
+        }
+
+        if ($request->filled('stan')) {
+            $value = trim((string) $request->input('stan'));
+            if ($value !== '') {
+                $query->where('stan', $value);
+                $filters['stan'] = $value;
+            }
+        }
+
+        if ($request->filled('kolor')) {
+            $value = trim((string) $request->input('kolor'));
+            if ($value !== '') {
+                $query->where('kolor', 'like', "%{$value}%");
+                $filters['kolor'] = $value;
+            }
+        }
+
+        if ($request->filled('liczba_drzwi') && is_numeric($request->input('liczba_drzwi'))) {
+            $value = (int) $request->input('liczba_drzwi');
+            $query->where('liczba_drzwi', $value);
+            $filters['liczba_drzwi'] = $value;
+        }
+
+        if ($request->filled('liczba_miejsc') && is_numeric($request->input('liczba_miejsc'))) {
+            $value = (int) $request->input('liczba_miejsc');
+            $query->where('liczba_miejsc', $value);
+            $filters['liczba_miejsc'] = $value;
+        }
+
+        foreach (['bezwypadkowy', 'pierwszy_wlasciciel', 'serwisowany_w_aso', 'zarejestrowany_w_polsce', 'metalik', 'wypadkowy'] as $booleanField) {
+            if ($request->filled($booleanField)) {
+                $rawValue = $request->input($booleanField);
+                $value = filter_var($rawValue, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                if ($value !== null) {
+                    $query->where($booleanField, $value);
+                    $filters[$booleanField] = $value;
+                }
+            }
         }
 
         $sortable = [
@@ -165,26 +248,10 @@ class OgloszenieController extends Controller
     public function store(StoreOgloszenieRequest $request): JsonResponse
     {
         $payload = $request->validated();
-
-        // Ustal użytkownika. Najpierw spróbuj z bearer tokenu Sanctum (endpoint jest publiczny),
-        // a jeśli brak, użyj/utwórz konto gościa.
         $user = $request->user();
 
-        if (! $user && $request->bearerToken()) {
-            $token = PersonalAccessToken::findToken($request->bearerToken());
-            if ($token && $token->tokenable instanceof User) {
-                $user = $token->tokenable;
-            }
-        }
-
         if (! $user) {
-            $user = User::firstOrCreate(
-                ['email' => 'guest@autotablica.local'],
-                [
-                    'name' => 'Gość',
-                    'password' => bcrypt(Str::random(24)),
-                ]
-            );
+            abort(401, 'Musisz być zalogowany, aby dodać ogłoszenie.');
         }
 
         $ogloszenie = Ogloszenie::create([
@@ -203,7 +270,7 @@ class OgloszenieController extends Controller
 
     public function show(Ogloszenie $ogloszenie): OgloszenieResource
     {
-        $ogloszenie->loadMissing(['marka', 'modelPojazdu', 'zdjecia', 'historiaPojazdu']);
+        $ogloszenie->loadMissing(['marka', 'modelPojazdu', 'zdjecia', 'historiaPojazdu', 'uzytkownik']);
 
         return new OgloszenieResource($ogloszenie);
     }

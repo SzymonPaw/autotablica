@@ -73,6 +73,56 @@ const AllListings: React.FC = () => {
   const [rokMin, setRokMin] = useState<string>('');
   const [rokMax, setRokMax] = useState<string>('');
   const [paliwo, setPaliwo] = useState<string>('');
+  const [przebiegMin, setPrzebiegMin] = useState<string>('');
+  const [przebiegMax, setPrzebiegMax] = useState<string>('');
+  const [mocMin, setMocMin] = useState<string>('');
+  const [mocMax, setMocMax] = useState<string>('');
+  const [pojemnoscMin, setPojemnoscMin] = useState<string>('');
+  const [pojemnoscMax, setPojemnoscMax] = useState<string>('');
+  const [skrzynia, setSkrzynia] = useState<string>('');
+  const [naped, setNaped] = useState<string>('');
+  const [kolor, setKolor] = useState<string>('');
+  const [stan, setStan] = useState<string>('');
+  const [liczbaDrzwi, setLiczbaDrzwi] = useState<string>('');
+  const [liczbaMiejsc, setLiczbaMiejsc] = useState<string>('');
+  const [bezwypadkowy, setBezwypadkowy] = useState<boolean>(false);
+  const [pierwszyWlasciciel, setPierwszyWlasciciel] = useState<boolean>(false);
+  const [serwisowanyWASO, setSerwisowanyWASO] = useState<boolean>(false);
+  const [zarejestrowanyWPolsce, setZarejestrowanyWPolsce] = useState<boolean>(false);
+  const [metalik, setMetalik] = useState<boolean>(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
+
+  const buildFilterParams = (initial: Record<string, any> = {}) => {
+    const params: Record<string, any> = { ...initial };
+
+    if (search.trim()) params.q = search.trim();
+    if (markaId) params.marka_id = Number(markaId);
+    if (modelId) params.model_id = Number(modelId);
+    if (cenaMin) params.cena_min = Number(cenaMin);
+    if (cenaMax) params.cena_max = Number(cenaMax);
+    if (rokMin) params.rok_min = Number(rokMin);
+    if (rokMax) params.rok_max = Number(rokMax);
+    if (paliwo) params.paliwo = paliwo;
+    if (przebiegMin) params.przebieg_min = Number(przebiegMin);
+    if (przebiegMax) params.przebieg_max = Number(przebiegMax);
+    if (mocMin) params.moc_min = Number(mocMin);
+    if (mocMax) params.moc_max = Number(mocMax);
+    if (pojemnoscMin) params.pojemnosc_min = Number(pojemnoscMin);
+    if (pojemnoscMax) params.pojemnosc_max = Number(pojemnoscMax);
+    if (skrzynia) params.skrzynia_biegow = skrzynia;
+    if (naped) params.naped = naped;
+    if (stan) params.stan = stan;
+    if (kolor.trim()) params.kolor = kolor.trim();
+    if (liczbaDrzwi) params.liczba_drzwi = Number(liczbaDrzwi);
+    if (liczbaMiejsc) params.liczba_miejsc = Number(liczbaMiejsc);
+    if (bezwypadkowy) params.bezwypadkowy = true;
+    if (pierwszyWlasciciel) params.pierwszy_wlasciciel = true;
+    if (serwisowanyWASO) params.serwisowany_w_aso = true;
+    if (zarejestrowanyWPolsce) params.zarejestrowany_w_polsce = true;
+    if (metalik) params.metalik = true;
+
+    return params;
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -134,15 +184,7 @@ const AllListings: React.FC = () => {
       setLoadingOgloszenia(true);
       setOgloszeniaError(null);
 
-      const params: Record<string, any> = { page: 1 };
-      if (search.trim()) params.q = search.trim();
-      if (markaId) params.marka_id = Number(markaId);
-      if (modelId) params.model_id = Number(modelId);
-      if (cenaMin) params.cena_min = Number(cenaMin);
-      if (cenaMax) params.cena_max = Number(cenaMax);
-      if (rokMin) params.rok_min = Number(rokMin);
-      if (rokMax) params.rok_max = Number(rokMax);
-      if (paliwo) params.paliwo = paliwo;
+      const params = buildFilterParams({ page: 1 });
 
       const res = await fetchListings(params);
       const { items, more } = handlePagination(res, 1);
@@ -167,6 +209,23 @@ const AllListings: React.FC = () => {
     setRokMin('');
     setRokMax('');
     setPaliwo('');
+    setPrzebiegMin('');
+    setPrzebiegMax('');
+    setMocMin('');
+    setMocMax('');
+    setPojemnoscMin('');
+    setPojemnoscMax('');
+    setSkrzynia('');
+    setNaped('');
+    setKolor('');
+    setStan('');
+    setLiczbaDrzwi('');
+    setLiczbaMiejsc('');
+    setBezwypadkowy(false);
+    setPierwszyWlasciciel(false);
+    setSerwisowanyWASO(false);
+    setZarejestrowanyWPolsce(false);
+    setMetalik(false);
 
     try {
       setLoadingOgloszenia(true);
@@ -190,15 +249,7 @@ const AllListings: React.FC = () => {
     setLoadingMore(true);
 
     try {
-      const params: Record<string, any> = { page: next };
-      if (search.trim()) params.q = search.trim();
-      if (markaId) params.marka_id = Number(markaId);
-      if (modelId) params.model_id = Number(modelId);
-      if (cenaMin) params.cena_min = Number(cenaMin);
-      if (cenaMax) params.cena_max = Number(cenaMax);
-      if (rokMin) params.rok_min = Number(rokMin);
-      if (rokMax) params.rok_max = Number(rokMax);
-      if (paliwo) params.paliwo = paliwo;
+      const params = buildFilterParams({ page: next });
 
       const res = await fetchListings(params);
       const { items, more } = handlePagination(res, next);
@@ -274,6 +325,139 @@ const AllListings: React.FC = () => {
               </select>
             </label>
           </div>
+
+          <button
+            type="button"
+            className={`advanced-toggle ${showAdvancedFilters ? 'is-open' : ''}`}
+            onClick={() => setShowAdvancedFilters((prev) => !prev)}
+          >
+            {showAdvancedFilters ? 'Ukryj zaawansowane filtry' : 'Pokaż zaawansowane filtry'}
+          </button>
+
+          {showAdvancedFilters && (
+            <div className="advanced-filters">
+              <div className="filter-grid">
+                <label>
+                  Przebieg od
+                  <input type="number" min="0" value={przebiegMin} onChange={(e) => setPrzebiegMin(e.target.value)} />
+                </label>
+                <label>
+                  Przebieg do
+                  <input type="number" min="0" value={przebiegMax} onChange={(e) => setPrzebiegMax(e.target.value)} />
+                </label>
+                <label>
+                  Moc silnika od (KM)
+                  <input type="number" min="0" value={mocMin} onChange={(e) => setMocMin(e.target.value)} />
+                </label>
+                <label>
+                  Moc silnika do (KM)
+                  <input type="number" min="0" value={mocMax} onChange={(e) => setMocMax(e.target.value)} />
+                </label>
+                <label>
+                  Pojemność od (cm³)
+                  <input type="number" min="0" value={pojemnoscMin} onChange={(e) => setPojemnoscMin(e.target.value)} />
+                </label>
+                <label>
+                  Pojemność do (cm³)
+                  <input type="number" min="0" value={pojemnoscMax} onChange={(e) => setPojemnoscMax(e.target.value)} />
+                </label>
+                <label>
+                  Skrzynia biegów
+                  <select value={skrzynia} onChange={(e) => setSkrzynia(e.target.value)}>
+                    <option value="">Dowolna</option>
+                    <option value="manualna">Manualna</option>
+                    <option value="automatyczna">Automatyczna</option>
+                    <option value="polautomatyczna">Półautomatyczna</option>
+                  </select>
+                </label>
+                <label>
+                  Napęd
+                  <select value={naped} onChange={(e) => setNaped(e.target.value)}>
+                    <option value="">Dowolny</option>
+                    <option value="przedni">Przedni</option>
+                    <option value="tylny">Tylny</option>
+                    <option value="4x4">4x4</option>
+                  </select>
+                </label>
+                <label>
+                  Stan
+                  <select value={stan} onChange={(e) => setStan(e.target.value)}>
+                    <option value="">Dowolny</option>
+                    <option value="nowy">Nowy</option>
+                    <option value="uzywany">Używany</option>
+                    <option value="uszkodzony">Uszkodzony</option>
+                  </select>
+                </label>
+                <label>
+                  Kolor
+                  <input type="text" value={kolor} onChange={(e) => setKolor(e.target.value)} placeholder="np. Czarny" />
+                </label>
+                <label>
+                  Liczba drzwi
+                  <select value={liczbaDrzwi} onChange={(e) => setLiczbaDrzwi(e.target.value)}>
+                    <option value="">Dowolna</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                  </select>
+                </label>
+                <label>
+                  Liczba miejsc
+                  <select value={liczbaMiejsc} onChange={(e) => setLiczbaMiejsc(e.target.value)}>
+                    <option value="">Dowolna</option>
+                    <option value="2">2</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="7">7</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="advanced-checkboxes">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={bezwypadkowy}
+                    onChange={(e) => setBezwypadkowy(e.target.checked)}
+                  />
+                  Bezwypadkowy
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={pierwszyWlasciciel}
+                    onChange={(e) => setPierwszyWlasciciel(e.target.checked)}
+                  />
+                  Pierwszy właściciel
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={serwisowanyWASO}
+                    onChange={(e) => setSerwisowanyWASO(e.target.checked)}
+                  />
+                  Serwisowany w ASO
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={zarejestrowanyWPolsce}
+                    onChange={(e) => setZarejestrowanyWPolsce(e.target.checked)}
+                  />
+                  Zarejestrowany w Polsce
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={metalik}
+                    onChange={(e) => setMetalik(e.target.checked)}
+                  />
+                  Lakier metalik
+                </label>
+              </div>
+            </div>
+          )}
 
           <div className="filter-actions">
             <button className="btn-primary" onClick={applyFilters}>Filtruj</button>

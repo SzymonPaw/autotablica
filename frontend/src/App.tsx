@@ -18,13 +18,15 @@ import ClientPanel from './pages/ClientPanel';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import LoadingScreen from './components/common/LoadingScreen';
+import LoginPrompt from './components/auth/LoginPrompt';
 import './App.css';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  fallback?: React.ReactElement;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, fallback }) => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
 
@@ -33,7 +35,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!user) {
-    return <Navigate to="/" state={{ from: location }} replace />;
+    return fallback ?? <Navigate to="/" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
@@ -80,9 +82,20 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         } 
       />
-      <Route 
-        path="/dodaj-ogloszenie" 
-        element={<AddListingPage />} 
+      <Route
+        path="/dodaj-ogloszenie"
+        element={
+          <ProtectedRoute
+            fallback={
+              <LoginPrompt
+                title="Zaloguj się, aby dodać ogłoszenie"
+                message="Do dodania ogłoszenia użytkownik musi być zalogowany."
+              />
+            }
+          >
+            <AddListingPage />
+          </ProtectedRoute>
+        }
       />
       <Route 
         path="/ogloszenia/:id/edytuj" 

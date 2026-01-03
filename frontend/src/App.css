@@ -440,8 +440,21 @@ button:hover {
 	color: #0f172a;
 }
 
-.detail-headline .favorite-toggle-container {
+.detail-actions {
 	margin-left: auto;
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+}
+
+.detail-actions .favorite-toggle-container {
+	margin-left: 0;
+}
+
+.detail-edit-button {
+	white-space: nowrap;
 }
 
 .price {
@@ -465,6 +478,75 @@ button:hover {
 	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 	gap: 8px 12px;
 	margin-bottom: 12px;
+}
+
+.contact-card {
+	margin-top: 0.5rem;
+	padding: 1.25rem;
+	border: 1px solid #e2e8f0;
+	border-radius: 14px;
+	background: linear-gradient(135deg, rgba(37, 99, 235, 0.04), rgba(15, 23, 42, 0.02));
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.contact-card__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 1rem;
+}
+
+.contact-card__label {
+	margin: 0;
+	font-size: 0.85rem;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: #94a3b8;
+}
+
+.contact-card__value {
+	margin: 0.2rem 0 0;
+	font-size: 1.05rem;
+	color: #0f172a;
+	font-weight: 600;
+}
+
+.contact-card__value--phone {
+	font-family: 'IBM Plex Mono', 'Courier New', monospace;
+}
+
+.contact-card__cta {
+	align-self: flex-start;
+	padding: 0.85rem 1.5rem;
+	border-radius: 999px;
+	background: #2563eb;
+	color: #fff;
+	text-decoration: none;
+	font-weight: 600;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.contact-card__cta:hover,
+.contact-card__cta:focus-visible {
+	transform: translateY(-1px);
+	box-shadow: 0 15px 30px -15px rgba(37, 99, 235, 0.8);
+}
+
+.contact-card__empty {
+	margin: 0;
+	color: #475569;
+}
+
+.contact-card__manage {
+	font-size: 0.9rem;
+	color: #2563eb;
+	text-decoration: none;
+}
+
+.contact-card__manage:hover,
+.contact-card__manage:focus-visible {
+	text-decoration: underline;
 }
 
 .spec {

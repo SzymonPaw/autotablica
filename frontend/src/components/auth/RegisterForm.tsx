@@ -9,6 +9,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
   const { register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -20,13 +21,14 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
 
     try {
       console.log('Rozpoczynam rejestrację...');
-      console.log('Dane:', { name, email, password });
+      console.log('Dane:', { name, email, phone, password });
       
-      await register(name, email, password);
+      await register(name, email, password, phone);
       console.log('Rejestracja udana!');
       
       setName('');
       setEmail('');
+      setPhone('');
       setPassword('');
       onSuccess?.();
     } catch (err) {
@@ -70,6 +72,20 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="register-phone">Numer telefonu</label>
+        <input
+          id="register-phone"
+          type="tel"
+          inputMode="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          required
+          autoComplete="tel"
+          placeholder="np. +48 600 000 000"
         />
       </div>
 

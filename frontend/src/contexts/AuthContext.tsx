@@ -18,7 +18,7 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, phone: string) => Promise<void>;
   logout: () => Promise<void>;
   deleteAccount: () => Promise<void>;
   updateProfile: (payload: UpdateProfilePayload) => Promise<UserProfile>;
@@ -113,13 +113,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (name: string, email: string, password: string, phone: string) => {
     try {
       const normalizedEmail = email.trim().toLowerCase();
       const response = await registerRequest({
         name: name.trim(),
         email: normalizedEmail,
         password,
+        phone: phone.trim(),
         token_name: 'frontend',
         abilities: ['*'],
       });

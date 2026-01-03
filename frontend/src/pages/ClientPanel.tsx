@@ -14,7 +14,7 @@ const ClientPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ClientPanelTab>('listings');
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [profileForm, setProfileForm] = useState({ name: '', email: '' });
+  const [profileForm, setProfileForm] = useState({ name: '', email: '', phone: '' });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
@@ -37,6 +37,7 @@ const ClientPanel: React.FC = () => {
       setProfileForm({
         name: user.name ?? '',
         email: user.email ?? '',
+        phone: user.phone ?? '',
       });
     }
   }, [user]);
@@ -68,10 +69,13 @@ const ClientPanel: React.FC = () => {
     setProfileSuccess(null);
     setProfileSaving(true);
     try {
-      await updateProfile({
+      const payload: Parameters<typeof updateProfile>[0] = {
         name: profileForm.name.trim(),
         email: profileForm.email.trim().toLowerCase(),
-      });
+        phone: profileForm.phone.trim() ? profileForm.phone.trim() : null,
+      };
+
+      await updateProfile(payload);
       setProfileSuccess('Zaktualizowano dane użytkownika.');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Nie udało się zaktualizować profilu.';
@@ -163,6 +167,17 @@ const ClientPanel: React.FC = () => {
                     required
                   />
                 </div>
+              </div>
+              <div className="client-panel__form-group">
+                <label htmlFor="profile-phone">Numer telefonu</label>
+                <input
+                  id="profile-phone"
+                  name="phone"
+                  type="tel"
+                  value={profileForm.phone}
+                  onChange={handleProfileInputChange}
+                  placeholder="np. +48 600 000 000"
+                />
               </div>
               <div className="client-panel__form-group">
                 <label>Data rejestracji</label>
