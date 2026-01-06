@@ -75,10 +75,15 @@ class OgloszenieController extends Controller
             }
         }
 
-        if ($request->filled('paliwo')) {
-            $value = trim((string) $request->input('paliwo'));
-            $query->where('rodzaj_paliwa', $value);
-            $filters['paliwo'] = $value;
+        $fuelFilters = $this->normalizeStringFilters($request->input('paliwo'));
+        if (! empty($fuelFilters)) {
+            if (count($fuelFilters) === 1) {
+                $query->where('rodzaj_paliwa', $fuelFilters[0]);
+                $filters['paliwo'] = $fuelFilters[0];
+            } else {
+                $query->whereIn('rodzaj_paliwa', $fuelFilters);
+                $filters['paliwo'] = $fuelFilters;
+            }
         }
 
         if ($request->filled('przebieg_min') && is_numeric($request->input('przebieg_min'))) {
@@ -129,27 +134,36 @@ class OgloszenieController extends Controller
             $filters['pojemnosc_max'] = $value;
         }
 
-        if ($request->filled('skrzynia_biegow')) {
-            $value = trim((string) $request->input('skrzynia_biegow'));
-            if ($value !== '') {
-                $query->where('skrzynia_biegow', $value);
-                $filters['skrzynia_biegow'] = $value;
+        $transmissionFilters = $this->normalizeStringFilters($request->input('skrzynia_biegow'));
+        if (! empty($transmissionFilters)) {
+            if (count($transmissionFilters) === 1) {
+                $query->where('skrzynia_biegow', $transmissionFilters[0]);
+                $filters['skrzynia_biegow'] = $transmissionFilters[0];
+            } else {
+                $query->whereIn('skrzynia_biegow', $transmissionFilters);
+                $filters['skrzynia_biegow'] = $transmissionFilters;
             }
         }
 
-        if ($request->filled('naped')) {
-            $value = trim((string) $request->input('naped'));
-            if ($value !== '') {
-                $query->where('naped', $value);
-                $filters['naped'] = $value;
+        $drivetrainFilters = $this->normalizeStringFilters($request->input('naped'));
+        if (! empty($drivetrainFilters)) {
+            if (count($drivetrainFilters) === 1) {
+                $query->where('naped', $drivetrainFilters[0]);
+                $filters['naped'] = $drivetrainFilters[0];
+            } else {
+                $query->whereIn('naped', $drivetrainFilters);
+                $filters['naped'] = $drivetrainFilters;
             }
         }
 
-        if ($request->filled('stan')) {
-            $value = trim((string) $request->input('stan'));
-            if ($value !== '') {
-                $query->where('stan', $value);
-                $filters['stan'] = $value;
+        $conditionFilters = $this->normalizeStringFilters($request->input('stan'));
+        if (! empty($conditionFilters)) {
+            if (count($conditionFilters) === 1) {
+                $query->where('stan', $conditionFilters[0]);
+                $filters['stan'] = $conditionFilters[0];
+            } else {
+                $query->whereIn('stan', $conditionFilters);
+                $filters['stan'] = $conditionFilters;
             }
         }
 
@@ -161,16 +175,26 @@ class OgloszenieController extends Controller
             }
         }
 
-        if ($request->filled('liczba_drzwi') && is_numeric($request->input('liczba_drzwi'))) {
-            $value = (int) $request->input('liczba_drzwi');
-            $query->where('liczba_drzwi', $value);
-            $filters['liczba_drzwi'] = $value;
+        $doorFilters = $this->normalizeNumericFilters($request->input('liczba_drzwi'));
+        if (! empty($doorFilters)) {
+            if (count($doorFilters) === 1) {
+                $query->where('liczba_drzwi', $doorFilters[0]);
+                $filters['liczba_drzwi'] = $doorFilters[0];
+            } else {
+                $query->whereIn('liczba_drzwi', $doorFilters);
+                $filters['liczba_drzwi'] = $doorFilters;
+            }
         }
 
-        if ($request->filled('liczba_miejsc') && is_numeric($request->input('liczba_miejsc'))) {
-            $value = (int) $request->input('liczba_miejsc');
-            $query->where('liczba_miejsc', $value);
-            $filters['liczba_miejsc'] = $value;
+        $seatFilters = $this->normalizeNumericFilters($request->input('liczba_miejsc'));
+        if (! empty($seatFilters)) {
+            if (count($seatFilters) === 1) {
+                $query->where('liczba_miejsc', $seatFilters[0]);
+                $filters['liczba_miejsc'] = $seatFilters[0];
+            } else {
+                $query->whereIn('liczba_miejsc', $seatFilters);
+                $filters['liczba_miejsc'] = $seatFilters;
+            }
         }
 
         foreach (['bezwypadkowy', 'pierwszy_wlasciciel', 'serwisowany_w_aso', 'zarejestrowany_w_polsce', 'metalik', 'wypadkowy'] as $booleanField) {
@@ -328,6 +352,48 @@ class OgloszenieController extends Controller
                 return null;
             })
             ->filter(fn (?int $id): bool => $id !== null && $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function normalizeStringFilters($value): array
+    {
+        if ($value === null || $value === '') {
+            return [];
+        }
+
+        $items = is_array($value)
+            ? $value
+            : array_map('trim', explode(',', (string) $value));
+
+        return collect($items)
+            ->map(fn ($item): string => trim((string) $item))
+            ->filter(fn (string $item): bool => $item !== '')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function normalizeNumericFilters($value): array
+    {
+        if ($value === null || $value === '') {
+            return [];
+        }
+
+        $items = is_array($value)
+            ? $value
+            : array_map('trim', explode(',', (string) $value));
+
+        return collect($items)
+            ->map(function ($item): ?int {
+                if (is_numeric($item)) {
+                    return (int) $item;
+                }
+
+                return null;
+            })
+            ->filter(fn (?int $number): bool => $number !== null)
             ->unique()
             ->values()
             ->all();

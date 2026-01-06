@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchBrands, fetchListings, fetchModels, MarkaDto, ModelDto } from '../api/client';
 import Listing from '../components/Listing';
 import SearchBar from '../components/SearchBar';
@@ -29,6 +29,180 @@ type ApiResponse = {
     current_page: number;
     last_page: number;
   };
+};
+
+type SelectOption = {
+  label: string;
+  value: string;
+};
+
+type OptionMultiSelectConfig = {
+  id: string;
+  label: string;
+  options: SelectOption[];
+  selected: string[];
+  setSelected: React.Dispatch<React.SetStateAction<string[]>>;
+  emptyLabel: string;
+};
+
+type RangeFilterId = 'budget' | 'year' | 'mileage' | 'power' | 'engine';
+
+type RangeFilterConfig = {
+  id: RangeFilterId;
+  label: string;
+  buttonLabel: string;
+  minValue: string;
+  maxValue: string;
+  setMin: (value: string) => void;
+  setMax: (value: string) => void;
+  inputProps?: {
+    min?: number;
+    max?: number;
+    step?: number;
+  };
+  summaryUnit?: string;
+};
+
+const numberFormatter = new Intl.NumberFormat('pl-PL');
+
+const formatRangeSummary = (minValue: string, maxValue: string, unit?: string): string => {
+  const formatValue = (value: string) => {
+    if (!value) return '';
+    const numericValue = Number(value);
+    if (Number.isNaN(numericValue)) {
+      return value;
+    }
+    const formatted = numberFormatter.format(numericValue);
+    return unit ? `${formatted} ${unit}` : formatted;
+  };
+
+  const hasMin = Boolean(minValue);
+  const hasMax = Boolean(maxValue);
+
+  if (!hasMin && !hasMax) {
+    return 'Nie ustawiono';
+  }
+
+  if (hasMin && hasMax) {
+    return `Od ${formatValue(minValue)} do ${formatValue(maxValue)}`;
+  }
+
+  if (hasMin) {
+    return `Od ${formatValue(minValue)}`;
+  }
+
+  return `Do ${formatValue(maxValue)}`;
+};
+
+const formatOptionSelectionSummary = (
+  selectedValues: string[],
+  options: SelectOption[],
+  emptyLabel: string,
+): string => {
+  if (!selectedValues.length) {
+    return emptyLabel;
+  }
+
+  const names = selectedValues
+    .map((value) => options.find((option) => option.value === value)?.label)
+    .filter((label): label is string => Boolean(label));
+
+  if (!names.length) {
+    return emptyLabel;
+  }
+
+  if (names.length === 1) {
+    return names[0];
+  }
+
+  if (names.length === 2) {
+    return `${names[0]}, ${names[1]}`;
+  }
+
+  return `${names[0]}, ${names[1]} +${names.length - 2}`;
+};
+
+const fuelOptions: SelectOption[] = [
+  { label: 'Dowolne', value: '' },
+  { label: 'Benzyna', value: 'benzyna' },
+  { label: 'Diesel', value: 'diesel' },
+  { label: 'LPG', value: 'lpg' },
+  { label: 'Elektryczny', value: 'elektryczny' },
+  { label: 'Hybryda', value: 'hybryda' },
+];
+
+const transmissionOptions: SelectOption[] = [
+  { label: 'Dowolna', value: '' },
+  { label: 'Manualna', value: 'manualna' },
+  { label: 'Automatyczna', value: 'automatyczna' },
+  { label: 'Półautomatyczna', value: 'polautomatyczna' },
+];
+
+const drivetrainOptions: SelectOption[] = [
+  { label: 'Dowolny', value: '' },
+  { label: 'Przedni', value: 'przedni' },
+  { label: 'Tylny', value: 'tylny' },
+  { label: '4x4', value: '4x4' },
+];
+
+const conditionOptions: SelectOption[] = [
+  { label: 'Dowolny', value: '' },
+  { label: 'Nowy', value: 'nowy' },
+  { label: 'Używany', value: 'uzywany' },
+  { label: 'Uszkodzony', value: 'uszkodzony' },
+];
+
+const doorOptions: SelectOption[] = [
+  { label: 'Dowolnie', value: '' },
+  { label: '2', value: '2' },
+  { label: '3', value: '3' },
+  { label: '4', value: '4' },
+  { label: '5', value: '5' },
+];
+
+const seatOptions: SelectOption[] = [
+  { label: 'Dowolnie', value: '' },
+  { label: '2', value: '2' },
+  { label: '4', value: '4' },
+  { label: '5', value: '5' },
+  { label: '7', value: '7' },
+];
+
+const requirementsOptions: SelectOption[] = [
+  { label: 'Bezwypadkowy', value: 'bezwypadkowy' },
+  { label: 'Pierwszy właściciel', value: 'pierwszy_wlasciciel' },
+  { label: 'Serwis w ASO', value: 'serwisowany_w_aso' },
+  { label: 'Zarejestrowany w Polsce', value: 'zarejestrowany_w_polsce' },
+  { label: 'Lakier metalik', value: 'metalik' },
+];
+
+const formatSummary = (
+  selectedIds: number[],
+  dictionary: { id: number; nazwa: string }[],
+  emptyLabel: string,
+  fallbackLabel: (count: number) => string,
+): string => {
+  if (!selectedIds.length) {
+    return emptyLabel;
+  }
+
+  const names = selectedIds
+    .map((id) => dictionary.find((item) => item.id === id)?.nazwa)
+    .filter((name): name is string => Boolean(name));
+
+  if (names.length === 1) {
+    return names[0];
+  }
+
+  if (names.length >= 2) {
+    const [first, second] = names;
+    if (names.length === 2) {
+      return `${first}, ${second}`;
+    }
+    return `${first}, ${second} +${names.length - 2}`;
+  }
+
+  return fallbackLabel(selectedIds.length);
 };
 
 function handlePagination(res: unknown, currentPage: number): { items: Ogloszenie[]; more: boolean } {
@@ -66,60 +240,78 @@ const AllListings: React.FC = () => {
   // Filtry
   const [brands, setBrands] = useState<MarkaDto[]>([]);
   const [models, setModels] = useState<ModelDto[]>([]);
-  const [markaId, setMarkaId] = useState<string>('');
-  const [modelId, setModelId] = useState<string>('');
+  const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
+  const [selectedModels, setSelectedModels] = useState<number[]>([]);
   const [cenaMin, setCenaMin] = useState<string>('');
   const [cenaMax, setCenaMax] = useState<string>('');
   const [rokMin, setRokMin] = useState<string>('');
   const [rokMax, setRokMax] = useState<string>('');
-  const [paliwo, setPaliwo] = useState<string>('');
+  const [selectedFuelTypes, setSelectedFuelTypes] = useState<string[]>([]);
   const [przebiegMin, setPrzebiegMin] = useState<string>('');
   const [przebiegMax, setPrzebiegMax] = useState<string>('');
   const [mocMin, setMocMin] = useState<string>('');
   const [mocMax, setMocMax] = useState<string>('');
   const [pojemnoscMin, setPojemnoscMin] = useState<string>('');
   const [pojemnoscMax, setPojemnoscMax] = useState<string>('');
-  const [skrzynia, setSkrzynia] = useState<string>('');
-  const [naped, setNaped] = useState<string>('');
+  const [selectedTransmissions, setSelectedTransmissions] = useState<string[]>([]);
+  const [selectedDrivetrains, setSelectedDrivetrains] = useState<string[]>([]);
   const [kolor, setKolor] = useState<string>('');
-  const [stan, setStan] = useState<string>('');
-  const [liczbaDrzwi, setLiczbaDrzwi] = useState<string>('');
-  const [liczbaMiejsc, setLiczbaMiejsc] = useState<string>('');
-  const [bezwypadkowy, setBezwypadkowy] = useState<boolean>(false);
-  const [pierwszyWlasciciel, setPierwszyWlasciciel] = useState<boolean>(false);
-  const [serwisowanyWASO, setSerwisowanyWASO] = useState<boolean>(false);
-  const [zarejestrowanyWPolsce, setZarejestrowanyWPolsce] = useState<boolean>(false);
-  const [metalik, setMetalik] = useState<boolean>(false);
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false);
+  const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
+  const [selectedDoorCounts, setSelectedDoorCounts] = useState<string[]>([]);
+  const [selectedSeatCounts, setSelectedSeatCounts] = useState<string[]>([]);
+  const [selectedRequirements, setSelectedRequirements] = useState<string[]>([]);
+  const [activeRangeModal, setActiveRangeModal] = useState<RangeFilterId | null>(null);
+  const [rangeDraftMin, setRangeDraftMin] = useState<string>('');
+  const [rangeDraftMax, setRangeDraftMax] = useState<string>('');
+  const [brandDropdownOpen, setBrandDropdownOpen] = useState(false);
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const [brandSearch, setBrandSearch] = useState('');
+  const [modelSearch, setModelSearch] = useState('');
+  const [activeOptionSelect, setActiveOptionSelect] = useState<string | null>(null);
+  const brandDropdownRef = useRef<HTMLDivElement | null>(null);
+  const modelDropdownRef = useRef<HTMLDivElement | null>(null);
+  const optionSelectRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const rangeModalMinInputRef = useRef<HTMLInputElement | null>(null);
+  const liveFiltersReadyRef = useRef(false);
+  const liveFiltersSuppressedRef = useRef(false);
+  const dropdownOverlayActive = brandDropdownOpen || modelDropdownOpen || Boolean(activeOptionSelect);
 
   const buildFilterParams = (initial: Record<string, any> = {}) => {
     const params: Record<string, any> = { ...initial };
 
     if (search.trim()) params.q = search.trim();
-    if (markaId) params.marka_id = Number(markaId);
-    if (modelId) params.model_id = Number(modelId);
+    if (selectedBrands.length === 1) {
+      params.marka_id = selectedBrands[0];
+    } else if (selectedBrands.length > 1) {
+      params.marka_ids = selectedBrands;
+    }
+    if (selectedModels.length === 1) {
+      params.model_id = selectedModels[0];
+    } else if (selectedModels.length > 1) {
+      params.model_ids = selectedModels;
+    }
     if (cenaMin) params.cena_min = Number(cenaMin);
     if (cenaMax) params.cena_max = Number(cenaMax);
     if (rokMin) params.rok_min = Number(rokMin);
     if (rokMax) params.rok_max = Number(rokMax);
-    if (paliwo) params.paliwo = paliwo;
+    if (selectedFuelTypes.length) params.paliwo = selectedFuelTypes;
     if (przebiegMin) params.przebieg_min = Number(przebiegMin);
     if (przebiegMax) params.przebieg_max = Number(przebiegMax);
     if (mocMin) params.moc_min = Number(mocMin);
     if (mocMax) params.moc_max = Number(mocMax);
     if (pojemnoscMin) params.pojemnosc_min = Number(pojemnoscMin);
     if (pojemnoscMax) params.pojemnosc_max = Number(pojemnoscMax);
-    if (skrzynia) params.skrzynia_biegow = skrzynia;
-    if (naped) params.naped = naped;
-    if (stan) params.stan = stan;
+    if (selectedTransmissions.length) params.skrzynia_biegow = selectedTransmissions;
+    if (selectedDrivetrains.length) params.naped = selectedDrivetrains;
+    if (selectedConditions.length) params.stan = selectedConditions;
     if (kolor.trim()) params.kolor = kolor.trim();
-    if (liczbaDrzwi) params.liczba_drzwi = Number(liczbaDrzwi);
-    if (liczbaMiejsc) params.liczba_miejsc = Number(liczbaMiejsc);
-    if (bezwypadkowy) params.bezwypadkowy = true;
-    if (pierwszyWlasciciel) params.pierwszy_wlasciciel = true;
-    if (serwisowanyWASO) params.serwisowany_w_aso = true;
-    if (zarejestrowanyWPolsce) params.zarejestrowany_w_polsce = true;
-    if (metalik) params.metalik = true;
+    if (selectedDoorCounts.length) params.liczba_drzwi = selectedDoorCounts.map(Number);
+    if (selectedSeatCounts.length) params.liczba_miejsc = selectedSeatCounts.map(Number);
+    if (selectedRequirements.includes('bezwypadkowy')) params.bezwypadkowy = true;
+    if (selectedRequirements.includes('pierwszy_wlasciciel')) params.pierwszy_wlasciciel = true;
+    if (selectedRequirements.includes('serwisowany_w_aso')) params.serwisowany_w_aso = true;
+    if (selectedRequirements.includes('zarejestrowany_w_polsce')) params.zarejestrowany_w_polsce = true;
+    if (selectedRequirements.includes('metalik')) params.metalik = true;
 
     return params;
   };
@@ -154,30 +346,163 @@ const AllListings: React.FC = () => {
 
   useEffect(() => {
     let mounted = true;
-    async function loadModels() {
+
+    if (selectedBrands.length !== 1) {
+      setModels([]);
+      setSelectedModels([]);
+      return () => { mounted = false; };
+    }
+
+    const brandId = selectedBrands[0];
+
+    (async () => {
       try {
-        if (!markaId) {
-          setModels([]);
-          setModelId('');
-          return;
-        }
-        const ms = await fetchModels(Number(markaId));
+        const ms = await fetchModels(brandId);
         if (!mounted) return;
         setModels(ms);
-        setModelId(prev => {
-          if (!prev) {
-            return prev;
-          }
-          return ms.some(m => String(m.id) === prev) ? prev : '';
-        });
+        setSelectedModels((prev) => prev.filter((id) => ms.some((model) => model.id === id)));
       } catch {
         if (!mounted) return;
         setModels([]);
+        setSelectedModels([]);
       }
-    }
-    loadModels();
+    })();
+
     return () => { mounted = false; };
-  }, [markaId]);
+  }, [selectedBrands]);
+
+  const modelsDisabled = selectedBrands.length !== 1;
+
+  const filteredBrands = useMemo(() => {
+    const query = brandSearch.trim().toLowerCase();
+    if (!query) return brands;
+    return brands.filter((brand) => brand.nazwa.toLowerCase().includes(query));
+  }, [brandSearch, brands]);
+
+  const filteredModels = useMemo(() => {
+    if (modelsDisabled) return [];
+    const query = modelSearch.trim().toLowerCase();
+    if (!query) return models;
+    return models.filter((model) => model.nazwa.toLowerCase().includes(query));
+  }, [modelSearch, models, modelsDisabled]);
+
+  const toggleBrand = (brandId: number) => {
+    setSelectedBrands((prev) =>
+      prev.includes(brandId) ? prev.filter((id) => id !== brandId) : [...prev, brandId]
+    );
+  };
+
+  const toggleModel = (modelId: number) => {
+    if (modelsDisabled) {
+      return;
+    }
+    setSelectedModels((prev) =>
+      prev.includes(modelId) ? prev.filter((id) => id !== modelId) : [...prev, modelId]
+    );
+  };
+
+  const toggleRequirement = (value: string) => {
+    setSelectedRequirements((prev) =>
+      prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
+    );
+  };
+
+  const brandSummary = useMemo(
+    () => formatSummary(selectedBrands, brands, 'Wszystkie marki', (count) => `${count} marek`),
+    [selectedBrands, brands],
+  );
+
+  const modelSummary = useMemo(() => {
+    if (modelsDisabled) {
+      return 'Wybierz jedną markę';
+    }
+    return formatSummary(selectedModels, models, 'Wszystkie modele', (count) => `${count} modeli`);
+  }, [selectedModels, models, modelsDisabled]);
+
+  useEffect(() => {
+    if (!brandDropdownOpen) return undefined;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!brandDropdownRef.current) return;
+      if (!brandDropdownRef.current.contains(event.target as Node)) {
+        setBrandDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [brandDropdownOpen]);
+
+  useEffect(() => {
+    if (!modelDropdownOpen) return undefined;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!modelDropdownRef.current) return;
+      if (!modelDropdownRef.current.contains(event.target as Node)) {
+        setModelDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [modelDropdownOpen]);
+
+  useEffect(() => {
+    if (!brandDropdownOpen) {
+      setBrandSearch('');
+    }
+  }, [brandDropdownOpen]);
+
+  useEffect(() => {
+    if (!modelDropdownOpen) {
+      setModelSearch('');
+    }
+  }, [modelDropdownOpen]);
+
+  useEffect(() => {
+    if (modelsDisabled) {
+      setModelDropdownOpen(false);
+      setModelSearch('');
+    }
+  }, [modelsDisabled]);
+
+  useEffect(() => {
+    if (!activeOptionSelect) return undefined;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const activeRef = optionSelectRefs.current[activeOptionSelect];
+      if (!activeRef) {
+        setActiveOptionSelect(null);
+        return;
+      }
+      if (!activeRef.contains(event.target as Node)) {
+        setActiveOptionSelect(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [activeOptionSelect]);
+
+  useEffect(() => {
+    if (!activeRangeModal) return undefined;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setActiveRangeModal(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [activeRangeModal]);
+
+  useEffect(() => {
+    if (activeRangeModal && rangeModalMinInputRef.current) {
+      rangeModalMinInputRef.current.focus();
+    }
+  }, [activeRangeModal]);
 
   const applyFilters = async () => {
     try {
@@ -199,33 +524,79 @@ const AllListings: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    if (!liveFiltersReadyRef.current) {
+      liveFiltersReadyRef.current = true;
+      return;
+    }
+
+    if (liveFiltersSuppressedRef.current) {
+      liveFiltersSuppressedRef.current = false;
+      return;
+    }
+
+    const debounceId = window.setTimeout(() => {
+      applyFilters();
+    }, 500);
+
+    return () => window.clearTimeout(debounceId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    search,
+    selectedBrands,
+    selectedModels,
+    cenaMin,
+    cenaMax,
+    rokMin,
+    rokMax,
+    selectedFuelTypes,
+    przebiegMin,
+    przebiegMax,
+    mocMin,
+    mocMax,
+    pojemnoscMin,
+    pojemnoscMax,
+    selectedTransmissions,
+    selectedDrivetrains,
+    kolor,
+    selectedConditions,
+    selectedDoorCounts,
+    selectedSeatCounts,
+    selectedRequirements,
+  ]);
+
   const resetFilters = async () => {
+    liveFiltersSuppressedRef.current = true;
     setSearch('');
-    setMarkaId('');
-    setModelId('');
+    setSelectedBrands([]);
+    setSelectedModels([]);
     setModels([]);
     setCenaMin('');
     setCenaMax('');
     setRokMin('');
     setRokMax('');
-    setPaliwo('');
     setPrzebiegMin('');
     setPrzebiegMax('');
     setMocMin('');
     setMocMax('');
     setPojemnoscMin('');
     setPojemnoscMax('');
-    setSkrzynia('');
-    setNaped('');
+    setSelectedFuelTypes([]);
+    setSelectedTransmissions([]);
+    setSelectedDrivetrains([]);
     setKolor('');
-    setStan('');
-    setLiczbaDrzwi('');
-    setLiczbaMiejsc('');
-    setBezwypadkowy(false);
-    setPierwszyWlasciciel(false);
-    setSerwisowanyWASO(false);
-    setZarejestrowanyWPolsce(false);
-    setMetalik(false);
+    setSelectedConditions([]);
+    setSelectedDoorCounts([]);
+    setSelectedSeatCounts([]);
+    setSelectedRequirements([]);
+    setBrandSearch('');
+    setModelSearch('');
+    setBrandDropdownOpen(false);
+    setModelDropdownOpen(false);
+    setActiveOptionSelect(null);
+    setActiveRangeModal(null);
+    setRangeDraftMin('');
+    setRangeDraftMax('');
 
     try {
       setLoadingOgloszenia(true);
@@ -264,224 +635,575 @@ const AllListings: React.FC = () => {
     }
   };
 
+  const registerOptionSelectRef = (id: string) => (node: HTMLDivElement | null) => {
+    optionSelectRefs.current[id] = node;
+  };
+
+  const rangeFilterConfigs: Record<RangeFilterId, RangeFilterConfig> = {
+    budget: {
+      id: 'budget',
+      label: 'Budżet (PLN)',
+      buttonLabel: 'Ustal budżet',
+      minValue: cenaMin,
+      maxValue: cenaMax,
+      setMin: setCenaMin,
+      setMax: setCenaMax,
+      inputProps: { min: 0, step: 1000 },
+      summaryUnit: 'PLN',
+    },
+    year: {
+      id: 'year',
+      label: 'Rok produkcji',
+      buttonLabel: 'Ustal rocznik',
+      minValue: rokMin,
+      maxValue: rokMax,
+      setMin: setRokMin,
+      setMax: setRokMax,
+      inputProps: { min: 1900, max: new Date().getFullYear(), step: 1 },
+    },
+    mileage: {
+      id: 'mileage',
+      label: 'Przebieg (km)',
+      buttonLabel: 'Ustal przebieg',
+      minValue: przebiegMin,
+      maxValue: przebiegMax,
+      setMin: setPrzebiegMin,
+      setMax: setPrzebiegMax,
+      inputProps: { min: 0, step: 1000 },
+      summaryUnit: 'km',
+    },
+    power: {
+      id: 'power',
+      label: 'Moc silnika (KM)',
+      buttonLabel: 'Ustal moc',
+      minValue: mocMin,
+      maxValue: mocMax,
+      setMin: setMocMin,
+      setMax: setMocMax,
+      inputProps: { min: 0, step: 10 },
+      summaryUnit: 'KM',
+    },
+    engine: {
+      id: 'engine',
+      label: 'Pojemność (cm³)',
+      buttonLabel: 'Ustal pojemność',
+      minValue: pojemnoscMin,
+      maxValue: pojemnoscMax,
+      setMin: setPojemnoscMin,
+      setMax: setPojemnoscMax,
+      inputProps: { min: 0, step: 100 },
+      summaryUnit: 'cm³',
+    },
+  };
+
+  const rangeFilterOrder: RangeFilterId[] = ['budget', 'year', 'mileage', 'power', 'engine'];
+
+  const activeRangeConfig = activeRangeModal ? rangeFilterConfigs[activeRangeModal] : null;
+
+  const openRangeModal = (id: RangeFilterId) => {
+    const config = rangeFilterConfigs[id];
+    setRangeDraftMin(config.minValue ?? '');
+    setRangeDraftMax(config.maxValue ?? '');
+    setActiveRangeModal(id);
+  };
+
+  const closeRangeModal = () => {
+    setActiveRangeModal(null);
+  };
+
+  const clearRangeModalDraft = () => {
+    setRangeDraftMin('');
+    setRangeDraftMax('');
+  };
+
+  const applyRangeModal = () => {
+    if (!activeRangeModal) return;
+    const config = rangeFilterConfigs[activeRangeModal];
+    config.setMin(rangeDraftMin);
+    config.setMax(rangeDraftMax);
+    setActiveRangeModal(null);
+  };
+
+  const optionSelectFields: OptionMultiSelectConfig[] = [
+    {
+      id: 'fuel',
+      label: 'Rodzaj paliwa',
+      options: fuelOptions,
+      selected: selectedFuelTypes,
+      setSelected: setSelectedFuelTypes,
+      emptyLabel: 'Dowolne paliwo',
+    },
+    {
+      id: 'gearbox',
+      label: 'Skrzynia biegów',
+      options: transmissionOptions,
+      selected: selectedTransmissions,
+      setSelected: setSelectedTransmissions,
+      emptyLabel: 'Dowolna skrzynia',
+    },
+    {
+      id: 'drive',
+      label: 'Napęd',
+      options: drivetrainOptions,
+      selected: selectedDrivetrains,
+      setSelected: setSelectedDrivetrains,
+      emptyLabel: 'Dowolny napęd',
+    },
+    {
+      id: 'condition',
+      label: 'Stan',
+      options: conditionOptions,
+      selected: selectedConditions,
+      setSelected: setSelectedConditions,
+      emptyLabel: 'Dowolny stan',
+    },
+    {
+      id: 'doors',
+      label: 'Liczba drzwi',
+      options: doorOptions,
+      selected: selectedDoorCounts,
+      setSelected: setSelectedDoorCounts,
+      emptyLabel: 'Dowolna liczba drzwi',
+    },
+    {
+      id: 'seats',
+      label: 'Liczba miejsc',
+      options: seatOptions,
+      selected: selectedSeatCounts,
+      setSelected: setSelectedSeatCounts,
+      emptyLabel: 'Dowolna liczba miejsc',
+    },
+  ];
+
+  const requirementsSelectId = 'requirements';
+  const requirementsSummary = formatOptionSelectionSummary(
+    selectedRequirements,
+    requirementsOptions,
+    'Brak dodatkowych wymagań',
+  );
+  const requirementsSelectionCount = selectedRequirements.length;
+  const isRequirementsOpen = activeOptionSelect === requirementsSelectId;
+
   return (
-    <div className="App">
-      <main className="main-content">
-        <div className="filters-section">
-          <h2>Filtry</h2>
-          <div className="filter-group">
-            <label>
-              Marka
-              <select name="marka" value={markaId} onChange={(e) => setMarkaId(e.target.value)}>
-                <option value="">Wszystkie marki</option>
-                {brands.map((b) => (
-                  <option key={b.id} value={b.id}>{b.nazwa}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Model
-              <select name="model" value={modelId} onChange={(e) => setModelId(e.target.value)} disabled={!markaId}>
-                <option value="">Wszystkie modele</option>
-                {models.map((m) => (
-                  <option key={m.id} value={m.id}>{m.nazwa}</option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <div className="filter-group">
-            <label>
-              Cena od
-              <input type="number" min="0" step="1000" value={cenaMin} onChange={(e) => setCenaMin(e.target.value)} />
-            </label>
-            <label>
-              Cena do
-              <input type="number" min="0" step="1000" value={cenaMax} onChange={(e) => setCenaMax(e.target.value)} />
-            </label>
-          </div>
-
-          <div className="filter-group">
-            <label>
-              Rok produkcji od
-              <input type="number" min="1900" max={new Date().getFullYear()} value={rokMin} onChange={(e) => setRokMin(e.target.value)} />
-            </label>
-            <label>
-              Rok produkcji do
-              <input type="number" min="1900" max={new Date().getFullYear()} value={rokMax} onChange={(e) => setRokMax(e.target.value)} />
-            </label>
-          </div>
-
-          <div className="filter-group">
-            <label>
-              Rodzaj paliwa
-              <select value={paliwo} onChange={(e) => setPaliwo(e.target.value)}>
-                <option value="">Wszystkie</option>
-                <option value="benzyna">Benzyna</option>
-                <option value="diesel">Diesel</option>
-                <option value="lpg">LPG</option>
-                <option value="elektryczny">Elektryczny</option>
-                <option value="hybryda">Hybryda</option>
-              </select>
-            </label>
-          </div>
-
-          <button
-            type="button"
-            className={`advanced-toggle ${showAdvancedFilters ? 'is-open' : ''}`}
-            onClick={() => setShowAdvancedFilters((prev) => !prev)}
-          >
-            {showAdvancedFilters ? 'Ukryj zaawansowane filtry' : 'Pokaż zaawansowane filtry'}
-          </button>
-
-          {showAdvancedFilters && (
-            <div className="advanced-filters">
-              <div className="filter-grid">
-                <label>
-                  Przebieg od
-                  <input type="number" min="0" value={przebiegMin} onChange={(e) => setPrzebiegMin(e.target.value)} />
-                </label>
-                <label>
-                  Przebieg do
-                  <input type="number" min="0" value={przebiegMax} onChange={(e) => setPrzebiegMax(e.target.value)} />
-                </label>
-                <label>
-                  Moc silnika od (KM)
-                  <input type="number" min="0" value={mocMin} onChange={(e) => setMocMin(e.target.value)} />
-                </label>
-                <label>
-                  Moc silnika do (KM)
-                  <input type="number" min="0" value={mocMax} onChange={(e) => setMocMax(e.target.value)} />
-                </label>
-                <label>
-                  Pojemność od (cm³)
-                  <input type="number" min="0" value={pojemnoscMin} onChange={(e) => setPojemnoscMin(e.target.value)} />
-                </label>
-                <label>
-                  Pojemność do (cm³)
-                  <input type="number" min="0" value={pojemnoscMax} onChange={(e) => setPojemnoscMax(e.target.value)} />
-                </label>
-                <label>
-                  Skrzynia biegów
-                  <select value={skrzynia} onChange={(e) => setSkrzynia(e.target.value)}>
-                    <option value="">Dowolna</option>
-                    <option value="manualna">Manualna</option>
-                    <option value="automatyczna">Automatyczna</option>
-                    <option value="polautomatyczna">Półautomatyczna</option>
-                  </select>
-                </label>
-                <label>
-                  Napęd
-                  <select value={naped} onChange={(e) => setNaped(e.target.value)}>
-                    <option value="">Dowolny</option>
-                    <option value="przedni">Przedni</option>
-                    <option value="tylny">Tylny</option>
-                    <option value="4x4">4x4</option>
-                  </select>
-                </label>
-                <label>
-                  Stan
-                  <select value={stan} onChange={(e) => setStan(e.target.value)}>
-                    <option value="">Dowolny</option>
-                    <option value="nowy">Nowy</option>
-                    <option value="uzywany">Używany</option>
-                    <option value="uszkodzony">Uszkodzony</option>
-                  </select>
-                </label>
-                <label>
-                  Kolor
-                  <input type="text" value={kolor} onChange={(e) => setKolor(e.target.value)} placeholder="np. Czarny" />
-                </label>
-                <label>
-                  Liczba drzwi
-                  <select value={liczbaDrzwi} onChange={(e) => setLiczbaDrzwi(e.target.value)}>
-                    <option value="">Dowolna</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                  </select>
-                </label>
-                <label>
-                  Liczba miejsc
-                  <select value={liczbaMiejsc} onChange={(e) => setLiczbaMiejsc(e.target.value)}>
-                    <option value="">Dowolna</option>
-                    <option value="2">2</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="7">7</option>
-                  </select>
-                </label>
+    <div className="App home-page all-listings-page">
+      <main className="main-content all-listings-layout">
+        <section className="filters-shell full-width">
+          <div className="filters-shell-inner">
+            <div className="all-filters-panel">
+              {dropdownOverlayActive && (
+                <div
+                  className="dropdown-overlay"
+                  onClick={() => {
+                    setBrandDropdownOpen(false);
+                    setModelDropdownOpen(false);
+                    setActiveOptionSelect(null);
+                  }}
+                />
+              )}
+              <div className="filters-panel-heading">
+                <div>
+                  <p className="filters-panel-title">Filtry ogłoszeń</p>
+                </div>
               </div>
 
-              <div className="advanced-checkboxes">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={bezwypadkowy}
-                    onChange={(e) => setBezwypadkowy(e.target.checked)}
-                  />
-                  Bezwypadkowy
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={pierwszyWlasciciel}
-                    onChange={(e) => setPierwszyWlasciciel(e.target.checked)}
-                  />
-                  Pierwszy właściciel
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={serwisowanyWASO}
-                    onChange={(e) => setSerwisowanyWASO(e.target.checked)}
-                  />
-                  Serwisowany w ASO
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={zarejestrowanyWPolsce}
-                    onChange={(e) => setZarejestrowanyWPolsce(e.target.checked)}
-                  />
-                  Zarejestrowany w Polsce
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={metalik}
-                    onChange={(e) => setMetalik(e.target.checked)}
-                  />
-                  Lakier metalik
-                </label>
+              <div className="filters-panel-body">
+                <div className="filters-panel-row primary">
+                  <div className="filter-field multi-select-field" ref={brandDropdownRef}>
+                    <span className="filter-label">Marki</span>
+                    <div className={`multi-select ${brandDropdownOpen ? 'is-open' : ''}`}>
+                      <button
+                        type="button"
+                        className="multi-select-trigger"
+                        onClick={() => setBrandDropdownOpen((prev) => !prev)}
+                        aria-haspopup="listbox"
+                        aria-expanded={brandDropdownOpen}
+                        aria-controls="brand-multi-select"
+                      >
+                        <span className="multi-select-summary">{brandSummary}</span>
+                        {selectedBrands.length > 0 && (
+                          <span className="selection-count">{selectedBrands.length}</span>
+                        )}
+                        <span className="multi-select-chevron">▾</span>
+                      </button>
+                      {brandDropdownOpen && (
+                        <div className="multi-select-dropdown" id="brand-multi-select" role="listbox" aria-multiselectable="true">
+                          {brands.length ? (
+                            <>
+                              <div className="multi-select-header">
+                                <div className="multi-select-search">
+                                  <input
+                                    type="text"
+                                    placeholder="Szukaj marki..."
+                                    value={brandSearch}
+                                    onChange={(event) => setBrandSearch(event.target.value)}
+                                    aria-label="Szukaj marki"
+                                    autoFocus
+                                  />
+                                </div>
+                                <button type="button" onClick={() => setSelectedBrands([])}>Wyczyść wybór</button>
+                              </div>
+                              {filteredBrands.length ? (
+                                <ul className="multi-select-options">
+                                  {filteredBrands.map((brand) => (
+                                    <li key={brand.id}>
+                                      <label
+                                        className={`multi-select-option ${selectedBrands.includes(brand.id) ? 'is-checked' : ''}`}
+                                      >
+                                        <span className="option-text">
+                                          <span className="option-name">{brand.nazwa}</span>
+                                          <span className="option-count">({brand.ogloszenia_count ?? 0})</span>
+                                        </span>
+                                        <span className="option-switch">
+                                          <input
+                                            type="checkbox"
+                                            checked={selectedBrands.includes(brand.id)}
+                                            onChange={() => toggleBrand(brand.id)}
+                                            className="switch-input"
+                                          />
+                                          <span className="switch-visual" aria-hidden="true" />
+                                        </span>
+                                      </label>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p className="multi-select-empty">Brak marek spełniających kryteria.</p>
+                              )}
+                            </>
+                          ) : (
+                            <p className="multi-select-empty">Wybierz markę, aby zobaczyć modele.</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className={`filter-field multi-select-field ${modelsDisabled ? 'is-disabled' : ''}`} ref={modelDropdownRef}>
+                    <span className="filter-label">Modele</span>
+                    <div className={`multi-select ${modelDropdownOpen ? 'is-open' : ''} ${modelsDisabled ? 'disabled' : ''}`}>
+                      <button
+                        type="button"
+                        className="multi-select-trigger"
+                        onClick={() => setModelDropdownOpen((prev) => !prev)}
+                        aria-haspopup="listbox"
+                        aria-expanded={modelDropdownOpen}
+                        aria-controls="model-multi-select"
+                        disabled={modelsDisabled}
+                      >
+                        <span className="multi-select-summary">{modelSummary}</span>
+                        {selectedModels.length > 0 && (
+                          <span className="selection-count">{selectedModels.length}</span>
+                        )}
+                        <span className="multi-select-chevron">▾</span>
+                      </button>
+                      {modelDropdownOpen && (
+                        <div className="multi-select-dropdown" id="model-multi-select" role="listbox" aria-multiselectable="true">
+                          {models.length ? (
+                            <>
+                              <div className="multi-select-header">
+                                <div className="multi-select-search">
+                                  <input
+                                    type="text"
+                                    placeholder="Szukaj modelu..."
+                                    value={modelSearch}
+                                    onChange={(event) => setModelSearch(event.target.value)}
+                                    aria-label="Szukaj modelu"
+                                    autoFocus
+                                  />
+                                </div>
+                                <button type="button" onClick={() => setSelectedModels([])}>Wyczyść wybór</button>
+                              </div>
+                              {filteredModels.length ? (
+                                <ul className="multi-select-options">
+                                  {filteredModels.map((model) => (
+                                    <li key={model.id}>
+                                      <label
+                                        className={`multi-select-option ${selectedModels.includes(model.id) ? 'is-checked' : ''}`}
+                                      >
+                                        <span className="option-text">
+                                          <span className="option-name">{model.nazwa}</span>
+                                        </span>
+                                        <span className="option-switch">
+                                          <input
+                                            type="checkbox"
+                                            checked={selectedModels.includes(model.id)}
+                                            onChange={() => toggleModel(model.id)}
+                                            className="switch-input"
+                                          />
+                                          <span className="switch-visual" aria-hidden="true" />
+                                        </span>
+                                      </label>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <p className="multi-select-empty">Brak modeli spełniających kryteria.</p>
+                              )}
+                            </>
+                          ) : (
+                            <p className="multi-select-empty">Wybierz markę, aby zobaczyć modele.</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="filter-field multi-select-field">
+                    <span className="filter-label">Wyszukiwanie</span>
+                    <SearchBar value={search} onChange={setSearch} onEnter={applyFilters} />
+                  </div>
+                </div>
+
+                <div className="filters-panel-row metrics-grid">
+                  {rangeFilterOrder.map((filterId) => {
+                    const config = rangeFilterConfigs[filterId];
+                    const summary = formatRangeSummary(
+                      config.minValue,
+                      config.maxValue,
+                      config.summaryUnit,
+                    );
+                    return (
+                      <div className="filter-card range-card" key={config.id}>
+                        <div className="range-card-header">
+                          <span className="filter-label">{config.label}</span>
+                          <p className="range-summary">{summary}</p>
+                        </div>
+                        <button
+                          type="button"
+                          className="range-trigger-btn"
+                          onClick={() => openRangeModal(config.id)}
+                        >
+                          {config.buttonLabel}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="filters-panel-row selects-grid">
+                  {optionSelectFields.map((field) => {
+                    const isOpen = activeOptionSelect === field.id;
+                    const selectionCount = field.selected.length;
+                    const summary = formatOptionSelectionSummary(field.selected, field.options, field.emptyLabel);
+
+                    return (
+                      <div
+                        key={field.id}
+                        className="filter-field multi-select-field option-select-field"
+                        ref={registerOptionSelectRef(field.id)}
+                      >
+                        <span className="filter-label">{field.label}</span>
+                        <div className={`multi-select ${isOpen ? 'is-open' : ''}`}>
+                          <button
+                            type="button"
+                            className="multi-select-trigger"
+                            onClick={() =>
+                              setActiveOptionSelect((prev) => (prev === field.id ? null : field.id))
+                            }
+                            aria-haspopup="listbox"
+                            aria-expanded={isOpen}
+                            aria-controls={`${field.id}-option-multi-select`}
+                          >
+                            <span className="multi-select-summary">{summary}</span>
+                            {selectionCount > 0 && (
+                              <span className="selection-count">{selectionCount}</span>
+                            )}
+                            <span className="multi-select-chevron">▾</span>
+                          </button>
+                          {isOpen && (
+                            <div
+                              className="multi-select-dropdown option-multi-select-dropdown"
+                              id={`${field.id}-option-multi-select`}
+                              role="listbox"
+                              aria-multiselectable="true"
+                            >
+                              <ul className="multi-select-options">
+                                {field.options.map((option) => {
+                                  const optionKey = option.value || option.label;
+                                  const isChecked = field.selected.includes(option.value);
+                                  return (
+                                    <li key={`${field.id}-${optionKey}`}>
+                                      <label
+                                        className={`multi-select-option ${isChecked ? 'is-checked' : ''}`}
+                                      >
+                                        <span className="option-text">
+                                          <span className="option-name">{option.label}</span>
+                                        </span>
+                                        <span className="option-switch">
+                                          <input
+                                            type="checkbox"
+                                            className="switch-input"
+                                            checked={isChecked}
+                                            onChange={() =>
+                                              field.setSelected((prev) =>
+                                                prev.includes(option.value)
+                                                  ? prev.filter((value) => value !== option.value)
+                                                  : [...prev, option.value]
+                                              )
+                                            }
+                                          />
+                                          <span className="switch-visual" aria-hidden="true" />
+                                        </span>
+                                      </label>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className="filter-field multi-select-field option-select-field color-field">
+                    <span className="filter-label">Kolor</span>
+                    <input type="text" value={kolor} onChange={(e) => setKolor(e.target.value)} placeholder="np. Czarny" />
+                  </div>
+                  <div
+                    className="filter-field multi-select-field option-select-field"
+                    ref={registerOptionSelectRef(requirementsSelectId)}
+                  >
+                    <span className="filter-label">Dodatkowe wymagania</span>
+                    <div className={`multi-select ${isRequirementsOpen ? 'is-open' : ''}`}>
+                      <button
+                        type="button"
+                        className="multi-select-trigger"
+                        onClick={() =>
+                          setActiveOptionSelect((prev) =>
+                            prev === requirementsSelectId ? null : requirementsSelectId
+                          )
+                        }
+                        aria-haspopup="listbox"
+                        aria-expanded={isRequirementsOpen}
+                        aria-controls={`${requirementsSelectId}-option-multi-select`}
+                      >
+                        <span className="multi-select-summary">{requirementsSummary}</span>
+                        {requirementsSelectionCount > 0 && (
+                          <span className="selection-count">{requirementsSelectionCount}</span>
+                        )}
+                        <span className="multi-select-chevron">▾</span>
+                      </button>
+                      {isRequirementsOpen && (
+                        <div
+                          className="multi-select-dropdown option-multi-select-dropdown"
+                          id={`${requirementsSelectId}-option-multi-select`}
+                          role="listbox"
+                          aria-multiselectable="true"
+                        >
+                          <ul className="multi-select-options">
+                            {requirementsOptions.map((option) => {
+                              const optionKey = option.value || option.label;
+                              const isChecked = selectedRequirements.includes(option.value);
+                              return (
+                                <li key={`${requirementsSelectId}-${optionKey}`}>
+                                  <label
+                                    className={`multi-select-option ${isChecked ? 'is-checked' : ''}`}
+                                  >
+                                    <span className="option-text">
+                                      <span className="option-name">{option.label}</span>
+                                    </span>
+                                    <span className="option-switch">
+                                      <input
+                                        type="checkbox"
+                                        className="switch-input"
+                                        checked={isChecked}
+                                        onChange={() => toggleRequirement(option.value)}
+                                      />
+                                      <span className="switch-visual" aria-hidden="true" />
+                                    </span>
+                                  </label>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="filter-actions modern-actions">
+                <button type="button" className="btn-secondary" onClick={resetFilters}>Wyczyść</button>
+                <button type="button" className="btn-primary" onClick={applyFilters}>Filtruj</button>
               </div>
             </div>
-          )}
 
-          <div className="filter-actions">
-            <button className="btn-primary" onClick={applyFilters}>Filtruj</button>
-            <button className="btn-secondary" onClick={resetFilters}>Wyczyść</button>
           </div>
-        </div>
+        </section>
 
-        <section className="listings all-listings">
-          <div className="listings-header">
-            <h2>Wszystkie ogłoszenia</h2>
-            <SearchBar value={search} onChange={setSearch} onEnter={applyFilters} />
-          </div>
-
-          <Listing items={ogloszenia} loading={loadingOgloszenia} error={ogloszeniaError} />
-
-          {hasMore && (
-            <div className="load-more">
-              <button type="button" onClick={handleLoadMore} disabled={loadingMore}>
-                {loadingMore ? 'Ładowanie...' : 'Pokaż więcej'}
-              </button>
+        <section className="listings promoted full-width all-listings-shell">
+          <div className="promoted-inner">
+            <div className="listings-header">
+              <h2>Wszystkie ogłoszenia</h2>
             </div>
-          )}
+
+            <Listing items={ogloszenia} loading={loadingOgloszenia} error={ogloszeniaError} />
+
+            {hasMore && (
+              <div className="load-more">
+                <button type="button" onClick={handleLoadMore} disabled={loadingMore}>
+                  {loadingMore ? 'Ładowanie...' : 'Pokaż więcej'}
+                </button>
+              </div>
+            )}
+          </div>
         </section>
       </main>
+      {activeRangeConfig && (
+        <div className="range-modal-overlay" role="dialog" aria-modal="true" aria-label={activeRangeConfig.label} onClick={closeRangeModal}>
+          <div className="range-modal" onClick={(event) => event.stopPropagation()}>
+            <header className="range-modal-header">
+              <div>
+                <p className="range-modal-eyebrow">Precyzyjny zakres</p>
+                <h3>{activeRangeConfig.label}</h3>
+              </div>
+              <button
+                type="button"
+                className="range-modal-close"
+                onClick={closeRangeModal}
+                aria-label="Zamknij okno zakresu"
+              >
+                ×
+              </button>
+            </header>
+            <div className="range-modal-body">
+              <label className="range-modal-field">
+                <span>Minimalna wartość</span>
+                <input
+                  type="number"
+                  ref={rangeModalMinInputRef}
+                  value={rangeDraftMin}
+                  onChange={(e) => setRangeDraftMin(e.target.value)}
+                  {...(activeRangeConfig.inputProps ?? {})}
+                />
+              </label>
+              <label className="range-modal-field">
+                <span>Maksymalna wartość</span>
+                <input
+                  type="number"
+                  value={rangeDraftMax}
+                  onChange={(e) => setRangeDraftMax(e.target.value)}
+                  {...(activeRangeConfig.inputProps ?? {})}
+                />
+              </label>
+            </div>
+            <div className="range-modal-actions">
+              <button type="button" className="range-modal-clear" onClick={clearRangeModalDraft}>
+                Wyczyść wartości
+              </button>
+              <div className="range-modal-actions-primary">
+                <button type="button" className="btn-secondary" onClick={closeRangeModal}>
+                  Anuluj
+                </button>
+                <button type="button" className="btn-primary" onClick={applyRangeModal}>
+                  Zapisz
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

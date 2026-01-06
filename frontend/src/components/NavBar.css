@@ -4,7 +4,7 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   --nav-height: 64px;
   --nav-button-height: 42px;
-  height: var(--nav-height);
+  min-height: var(--nav-height);
   padding: 0 1rem;
   display: flex;
   justify-content: center;
@@ -71,6 +71,42 @@
   display: flex;
   justify-content: flex-end;
   flex: 1;
+}
+
+.navbar-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  background: #ffffff;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.navbar-toggle span {
+  width: 20px;
+  height: 2px;
+  border-radius: 999px;
+  background: #0f172a;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.navbar-toggle.is-open span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.navbar-toggle.is-open span:nth-child(2) {
+  opacity: 0;
+}
+
+.navbar-toggle.is-open span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
 }
 
 .nav-buttons {
@@ -201,4 +237,59 @@
   display: flex;
   gap: 1rem;
   justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .navbar {
+    padding: 0.75rem 1rem;
+  }
+
+  .navbar-inner {
+    align-items: center;
+  }
+
+  .navbar-toggle {
+    display: inline-flex;
+  }
+
+  .navbar-menu {
+    position: fixed;
+    top: var(--nav-height);
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    background: #ffffff;
+    padding: 1.5rem 1.25rem 2rem;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
+    gap: 1.25rem;
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    z-index: 1001;
+    flex: initial;
+    max-height: calc(100vh - var(--nav-height));
+    overflow-y: auto;
+  }
+
+  .navbar-menu.is-open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .nav-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nav-buttons > * {
+    width: 100%;
+  }
+
+  .navbar-menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.35);
+    z-index: 1000;
+  }
 }

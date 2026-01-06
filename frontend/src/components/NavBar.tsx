@@ -9,9 +9,13 @@ import { REQUIRE_AUTH_EVENT, OPEN_REGISTER_EVENT } from '../constants/events';
 const NavBar: React.FC = () => {
   const { user, logout } = useAuth();
   const [activeModal, setActiveModal] = useState<'login' | 'register' | 'loginRequired' | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => setMobileMenuOpen((prev) => !prev);
+  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   const handleAddListingClick = () => {
-    // Tymczasowo: każdy może dodać ogłoszenie
+    closeMobileMenu();
     window.location.href = '/dodaj-ogloszenie';
   };
 
@@ -34,17 +38,29 @@ const NavBar: React.FC = () => {
             <Link to="/" aria-label="Przejdź do strony głównej">AutoTablica</Link>
           </h1>
         </div>
+        <button
+          type="button"
+          className={`navbar-toggle ${mobileMenuOpen ? 'is-open' : ''}`}
+          onClick={toggleMobileMenu}
+          aria-label={mobileMenuOpen ? 'Zamknij menu nawigacji' : 'Otwórz menu nawigacji'}
+          aria-expanded={mobileMenuOpen}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
         
-        <div className="navbar-menu">
+        <div className={`navbar-menu ${mobileMenuOpen ? 'is-open' : ''}`}>
           <div className="nav-buttons">
             <Link
               className="btn-ghost"
               to="/ulubione"
               onClick={(event) => {
-              if (!user) {
-                event.preventDefault();
-                setActiveModal('login');
-              }
+                if (!user) {
+                  event.preventDefault();
+                  setActiveModal('login');
+                }
+                closeMobileMenu();
               }}
               aria-label="Ulubione"
             >
@@ -67,19 +83,28 @@ const NavBar: React.FC = () => {
           </button>
             {!user ? (
               <>
-                <button className="btn-primary" onClick={() => setActiveModal('login')}>
+                <button className="btn-primary" onClick={() => {
+                  closeMobileMenu();
+                  setActiveModal('login');
+                }}>
                   Logowanie
                 </button>
-                <button className="btn-secondary" onClick={() => setActiveModal('register')}>
+                <button className="btn-secondary" onClick={() => {
+                  closeMobileMenu();
+                  setActiveModal('register');
+                }}>
                   Rejestracja
                 </button>
               </>
             ) : (
               <>
-                <Link className="btn-primary" to="/panel-klienta">
+                <Link className="btn-primary" to="/panel-klienta" onClick={closeMobileMenu}>
                   Panel klienta
                 </Link>
-                <button className="btn-secondary" onClick={logout}>
+                <button className="btn-secondary" onClick={() => {
+                  closeMobileMenu();
+                  logout();
+                }}>
                   Wyloguj się
                 </button>
               </>
@@ -87,6 +112,10 @@ const NavBar: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {mobileMenuOpen && (
+        <div className="navbar-menu-overlay" role="presentation" onClick={closeMobileMenu} />
+      )}
 
       {activeModal === 'login' && (
         <div className="modal">
