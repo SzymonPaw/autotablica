@@ -3,7 +3,10 @@
 Dokument obejmuje wszystkie ukończone elementy warstwy API. Koncentruje się na kontraktach HTTP, autoryzacji oraz scenariuszach biznesowych zweryfikowanych w trakcie implementacji. Wszystkie przykłady bazują na faktycznych danych z dumpu `autotablica.sql` (np. ogloszenie ID 3 "Sprzedam Audi A4 2.0 TDI").
 
 ## Podstawy
-- **Bazowy URL**: `http://localhost:8000/api`
+- **Bazowy URL (lokalnie)**: `http://localhost:8000/api`
+- **Bazowy URL (produkcja)**:
+  - docelowo: `https://autotablica.xce.pl/api`
+  - jeśli na hostingu LiteSpeed/Hostido `/api/*` zwraca 404, a działa tylko wariant „podwójny”: `https://autotablica.xce.pl/api/api`
 - **Format**: JSON (`Accept: application/json`)
 - **Uwierzytelnianie**: Laravel Sanctum (naglowek `Authorization: Bearer <token>`). Endpointy publiczne to logowanie/rejestracja, listing ogloszen i slowniki.
 - **CORS**: domyslna konfiguracja Laravela, przy integracji SPA wymagane ustawienie `SANCTUM_STATEFUL_DOMAINS`.
