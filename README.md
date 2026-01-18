@@ -1,4 +1,5 @@
 # AutoTablica - Instrukcja uruchomienia dla zespołu
+# Demo: https://autotablica.xce.pl/
 
 ## Wymagania
 - Docker Desktop
