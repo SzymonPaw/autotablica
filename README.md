@@ -1,4 +1,34 @@
-# AutoTablica - Instrukcja uruchomienia dla zespołu
+# Autotablica  
+### Nowoczesna aplikacja ogłoszeń samochodowych **Laravel API + React**
+
+---
+
+## Informacje o uczelni
+
+**Uniwersytet WSB Merito w Gdańsku**  
+Wydział Informatyki i Nowych Technologii
+
+---
+
+## Autorzy
+
+- **Szymon Paw**  
+  nr albumu: **72815**
+
+- **Filip Mech**  
+  nr albumu: **72813**
+
+---
+
+## Charakter pracy
+
+Projekt wdrożeniowy - Praca inżynierska na kierunku **Informatyka**
+
+---
+
+## Opiekun pracy
+
+**Paweł Dziurewicz**
 # Demo: https://autotablica.xce.pl/
 
 ## Wymagania
